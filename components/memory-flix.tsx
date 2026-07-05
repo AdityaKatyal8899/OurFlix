@@ -46,9 +46,8 @@ export function MemoryFlix({
     const getByCategory = (category: string) => initialMedia.filter((m) => m.category === category)
     
     return [
-      { title: '❤️ Favorite Memories', items: getFavorites() },
-      { title: '📷 Recent Photos', items: getByType('image') },
-      { title: '🎥 Videos', items: getByType('video') },
+      { title: '💖 HER', items: getByCategory('HER') },
+      { title: '👥 Peeps', items: getByCategory('Peeps') },
       { title: '✨ Cute Moments', items: getByCategory('Cute Moments') },
       { title: '🌸 Random Smiles', items: getByCategory('Random Smiles') },
     ]
@@ -144,11 +143,11 @@ export function MemoryFlix({
             ) : (
               <main>
                 <HeroBanner
-                  items={recentMedia}
+                  items={recentMedia.slice(0, 6)}
                   onPlay={(item) => {
                     const index = recentMedia.findIndex((x) => x.id === item.id)
                     setActiveSlideshow({
-                      items: recentMedia,
+                      items: recentMedia.slice(0, 6),
                       startIndex: index >= 0 ? index : 0,
                     })
                   }}

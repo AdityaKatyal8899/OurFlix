@@ -93,7 +93,7 @@ export function MediaCarousel({ title, items, onSelect }: MediaCarouselProps) {
           {items.map((item) => (
             <div
               key={item.id}
-              className="w-[38vw] snap-start sm:w-[24vw] md:w-[18vw] lg:w-[14vw] xl:w-[11.5vw]"
+              className="w-[38vw] shrink-0 snap-start sm:w-[24vw] md:w-[18vw] lg:w-[14vw] xl:w-[11.5vw]"
             >
               <MediaCard item={item} onSelect={onSelect} />
             </div>

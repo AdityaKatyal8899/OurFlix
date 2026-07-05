@@ -39,6 +39,15 @@ export async function getPresignedUrl(key: string): Promise<string> {
     return await getSignedUrl(s3Client, command, { expiresIn: 86400 })
   } catch (error) {
     console.error(`Failed to generate presigned URL for key: ${key}`, error)
+    if (key.startsWith('Her/')) {
+      return `/${key}`
+    }
+    if (key.startsWith('Featured/')) {
+      return `/${key}`
+    }
+    if (key.startsWith('Peeps/')) {
+      return `/${key}`
+    }
     if (
       key.startsWith('files') ||
       key.endsWith('Slide.jpg') ||
