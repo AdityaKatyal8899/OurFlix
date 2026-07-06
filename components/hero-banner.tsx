@@ -41,10 +41,9 @@ export function HeroBanner({ items, onPlay }: HeroBannerProps) {
 
   if (!currentItem) return null
 
-  // Description fallbacks based on item data
-  const description = currentItem.type === 'video'
+  const description = currentItem.description || (currentItem.type === 'video'
     ? `Relive this cinematic video memory: "${currentItem.title}". Captured in stunning resolution and saved forever.`
-    : `A beautiful snapshot of "${currentItem.title}" taken on ${new Date(currentItem.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.`
+    : `A beautiful snapshot of "${currentItem.title}" taken on ${new Date(currentItem.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.`)
 
   return (
     <section className="relative h-[70vh] min-h-[520px] w-full overflow-hidden bg-black select-none">
@@ -74,30 +73,29 @@ export function HeroBanner({ items, onPlay }: HeroBannerProps) {
 
 
       {/* Content Overlay */}
-      <div className="relative z-10 mx-auto flex h-full max-w-[1600px] flex-col justify-end px-4 pb-16 sm:px-8 sm:pb-20">
+      <div className="relative z-10 mx-auto flex h-full max-w-[1600px] flex-col justify-end px-4 pb-6 sm:px-8 sm:pb-10">
         <div className="max-w-xl text-left">
           <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-medium uppercase tracking-widest text-primary backdrop-blur-sm">
             Featured Memory
           </span>
           
-          <div className="h-[120px] sm:h-[150px] overflow-hidden relative">
+          <div className="relative mt-2">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentIndex}
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
+                exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.4 }}
-                className="absolute inset-0 flex flex-col justify-end"
               >
-                <h1 className="text-balance font-serif text-3xl font-bold leading-tight text-foreground sm:text-5xl md:text-6xl">
+                <h1 className="text-balance font-serif text-3xl font-bold leading-tight text-foreground sm:text-5xl md:text-6xl drop-shadow-md">
                   {currentItem.title}
                 </h1>
               </motion.div>
             </AnimatePresence>
           </div>
 
-          <div className="h-[60px] overflow-hidden relative mt-4">
+          <div className="relative mt-3">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentIndex}
@@ -105,9 +103,8 @@ export function HeroBanner({ items, onPlay }: HeroBannerProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
-                className="absolute inset-0"
               >
-                <p className="max-w-md text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base line-clamp-2">
+                <p className="max-w-md text-pretty text-sm leading-relaxed text-white sm:text-base line-clamp-3 font-medium drop-shadow-sm">
                   {description}
                 </p>
               </motion.div>

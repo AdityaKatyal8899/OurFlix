@@ -13,6 +13,7 @@ export interface MediaItem {
   favorite: boolean
   /** ISO date string */
   date: string
+  description?: string
 }
 
 export interface MediaRow {
