@@ -2,6 +2,8 @@ import { MemoryFlix } from '@/components/memory-flix'
 import { MEDIA } from '@/lib/data'
 import { getPresignedUrl } from '@/lib/s3'
 
+export const dynamic = 'force-dynamic'
+
 export default async function Page() {
   const resolvedMedia = await Promise.all(
     MEDIA.map(async (item) => {

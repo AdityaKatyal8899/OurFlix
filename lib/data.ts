@@ -28,7 +28,7 @@ export const MEDIA: MediaItem[] = [
   {
     id: 'featured-3',
     title: 'AWARD-WINNING LOOKS',
-    type: 'image',
+    type: 'image', 
     thumbnail: 'Featured/slide3.jpg',
     mediaUrl: 'Featured/slide3.jpg',
     category: 'Featured',
