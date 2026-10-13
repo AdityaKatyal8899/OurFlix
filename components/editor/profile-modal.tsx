@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { EditModal } from './edit-modal'
-import { Upload, Check, Image as ImageIcon } from 'lucide-react'
+import { Upload, Check, Image as ImageIcon, KeyRound, Lock, Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
 
 interface ProfileModalProps {
@@ -10,7 +10,8 @@ interface ProfileModalProps {
   onClose: () => void
   currentName: string
   currentAvatar: string
-  onSave: (newName: string, newAvatar: string) => void
+  currentPasscode?: string
+  onSave: (newName: string, newAvatar: string, newPasscode?: string) => void
 }
 
 export function ProfileModal({
@@ -18,16 +19,22 @@ export function ProfileModal({
   onClose,
   currentName,
   currentAvatar,
+  currentPasscode = '1234',
   onSave,
 }: ProfileModalProps) {
   const [name, setName] = useState(currentName)
   const [avatar, setAvatar] = useState(currentAvatar)
+  const [passcode, setPasscode] = useState(currentPasscode)
+  const [showPasscode, setShowPasscode] = useState(false)
+  const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setName(currentName)
     setAvatar(currentAvatar)
-  }, [currentName, currentAvatar, isOpen])
+    setPasscode(currentPasscode)
+    setError('')
+  }, [currentName, currentAvatar, currentPasscode, isOpen])
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -39,18 +46,28 @@ export function ProfileModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (name.trim()) {
-      onSave(name.trim(), avatar)
-      onClose()
+    setError('')
+
+    if (!name.trim()) {
+      setError('Please provide a profile name')
+      return
     }
+
+    if (passcode.length < 4) {
+      setError('Passcode must be at least 4 digits')
+      return
+    }
+
+    onSave(name.trim(), avatar, passcode)
+    onClose()
   }
 
   return (
     <EditModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Customize Profile"
-      subtitle="Update the user name and avatar shown on the gateway & navigation bar."
+      title="Customize Profile & Security"
+      subtitle="Update your profile avatar, name, and secret creator passcode."
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Profile Avatar Selector */}
@@ -103,19 +120,53 @@ export function ProfileModal({
           />
         </div>
 
-        {/* Avatar Image URL input (optional fallback) */}
-        <div>
-          <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-            Or Paste Image URL
-          </label>
-          <input
-            type="text"
-            value={avatar.startsWith('blob:') ? '' : avatar}
-            onChange={(e) => setAvatar(e.target.value)}
-            placeholder="https://... or /photos/..."
-            className="w-full rounded-lg border border-white/10 bg-black/40 px-3.5 py-2 text-xs text-white/80 placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-          />
+        {/* Secret Passcode Editor */}
+        <div className="pt-2 border-t border-white/10 space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-1.5 text-xs font-medium text-white uppercase tracking-wider">
+              <KeyRound className="size-3.5 text-primary" />
+              Creator Passcode (PIN)
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowPasscode(!showPasscode)}
+              className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-white transition-colors"
+            >
+              {showPasscode ? (
+                <>
+                  <EyeOff className="size-3" />
+                  <span>Hide</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="size-3" />
+                  <span>Show</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="relative">
+            <input
+              type={showPasscode ? 'text' : 'password'}
+              value={passcode}
+              onChange={(e) => setPasscode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              maxLength={6}
+              placeholder="e.g. 1234"
+              className="w-full rounded-lg border border-white/10 bg-black/40 px-3.5 py-2.5 text-sm text-white font-mono tracking-widest placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Anyone with your link can view the stream, but only you can unlock edit mode with this PIN. Default is <span className="text-white font-semibold">1234</span>.
+          </p>
         </div>
+
+        {error && (
+          <p className="text-xs text-rose-400 font-medium">
+            {error}
+          </p>
+        )}
 
         <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
           <button
@@ -130,7 +181,7 @@ export function ProfileModal({
             className="flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 active:scale-95 transition-all"
           >
             <Check className="size-4" />
-            Save Profile
+            Save Profile & Passcode
           </button>
         </div>
       </form>

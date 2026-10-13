@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Film, Pencil, Lock } from 'lucide-react'
+import { Film, Pencil, Lock, KeyRound } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { useScrolled } from '@/hooks/use-scrolled'
@@ -115,6 +115,18 @@ export function Navbar({
             >
               <Lock className="size-3 text-primary" />
               <span className="hidden sm:inline">Creator</span>
+            </button>
+          )}
+
+          {isCreatorUnlocked && onEditProfile && (
+            <button
+              type="button"
+              onClick={onEditProfile}
+              className="flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/20 transition-all shadow-sm cursor-pointer"
+              title="Edit Creator Passcode & Profile"
+            >
+              <KeyRound className="size-3" />
+              <span className="hidden sm:inline">Edit PIN</span>
             </button>
           )}
 

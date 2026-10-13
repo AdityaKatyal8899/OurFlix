@@ -335,9 +335,15 @@ export function MemoryFlix({
     setBrandName(newBrand)
   }
 
-  const handleSaveProfile = (newName: string, newAvatar: string) => {
+  const handleSaveProfile = (newName: string, newAvatar: string, newPasscode?: string) => {
     setProfileName(newName)
     setAvatarUrl(newAvatar)
+    if (newPasscode) {
+      setCreatorPasscode(newPasscode)
+      try {
+        localStorage.setItem(`${STORAGE_KEY_PASSCODE}${slugSuffix}`, newPasscode)
+      } catch {}
+    }
   }
 
   const handleSaveHeroSlide = (updatedItem: MediaItem) => {
@@ -548,6 +554,7 @@ export function MemoryFlix({
         onClose={() => setIsProfileModalOpen(false)}
         currentName={profileName}
         currentAvatar={avatarUrl}
+        currentPasscode={creatorPasscode}
         onSave={handleSaveProfile}
       />
 

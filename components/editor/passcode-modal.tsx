@@ -111,11 +111,39 @@ export function PasscodeModal({
                 />
               </div>
 
-              {error && (
-                <div className="flex items-center justify-center gap-1.5 text-xs text-red-400">
-                  <AlertCircle className="size-3.5" />
-                  <span>Incorrect passcode. Please try again.</span>
+              {error ? (
+                <div className="flex flex-col items-center gap-1 text-xs text-rose-400">
+                  <div className="flex items-center gap-1.5">
+                    <AlertCircle className="size-3.5" />
+                    <span>Incorrect passcode.</span>
+                  </div>
+                  <span className="text-[11px] text-zinc-400">
+                    Try default{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPin('1234')
+                        setError(false)
+                      }}
+                      className="text-primary hover:underline font-bold"
+                    >
+                      1234
+                    </button>{' '}
+                    if you haven&apos;t set a custom PIN yet.
+                  </span>
                 </div>
+              ) : (
+                <p className="text-[11px] text-zinc-400">
+                  Default PIN is{' '}
+                  <button
+                    type="button"
+                    onClick={() => setPin('1234')}
+                    className="text-primary hover:underline font-bold"
+                  >
+                    1234
+                  </button>{' '}
+                  unless customized.
+                </p>
               )}
 
               <button
