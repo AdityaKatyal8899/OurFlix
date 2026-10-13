@@ -70,7 +70,10 @@ export async function getSiteBySlug(rawSlug: string): Promise<SiteData | null> {
           creatorPasscode: siteDoc.creatorPasscode || (slug === 'capybara' ? '2233' : '1234'),
           categories: siteDoc.categories || (slug === 'capybara' ? ['🌿 Chill & Vibe', '🍉 Golden Moments'] : ['💖 HER', '👥 Peeps', '✨ Cute Moments', '🌸 Random Smiles']),
           mediaItems: siteDoc.mediaItems || [],
-          isPaid: siteDoc.isPaid ?? true,
+          isPaid:
+            slug === 'rdxthunder' || slug === 'capybara' || slug === 'demo'
+              ? true
+              : (siteDoc.isPaid ?? false),
           plan: siteDoc.plan || (slug === 'capybara' ? 'mini' : 'premier'),
           stripeSessionId: siteDoc.stripeSessionId,
           transactionId: siteDoc.transactionId,

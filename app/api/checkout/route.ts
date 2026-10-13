@@ -38,9 +38,16 @@ export async function POST(request: NextRequest) {
     const planKey = (['mini', 'premier', 'vip'].includes(rawPlan) ? rawPlan : 'premier') as PlanKey
     const pricing = PLAN_PRICING[planKey]
 
-    // Check if site already exists and is paid
+    // Check if site already exists and is actually paid with a confirmed transaction
     const existing = await getSiteBySlug(slug)
-    if (existing && existing.isPaid && slug !== 'rdxthunder' && slug !== 'capybara') {
+    if (
+      existing &&
+      existing.isPaid &&
+      existing.transactionId &&
+      slug !== 'rdxthunder' &&
+      slug !== 'capybara' &&
+      slug !== 'demo'
+    ) {
       return NextResponse.json(
         { error: `"${slug}" is already claimed by someone. Please choose another slug.` },
         { status: 409 }

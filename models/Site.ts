@@ -77,7 +77,7 @@ const SiteSchema = new Schema<ISite>(
     },
     isPaid: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     plan: {
       type: String,
