@@ -224,6 +224,8 @@ export function Slideshow({ items, startIndex, onClose }: SlideshowProps) {
                 <video
                   ref={videoRef}
                   src={currentItem.mediaUrl}
+                  poster={currentItem.thumbnail}
+                  preload="metadata"
                   autoPlay={isPlaying}
                   playsInline
                   muted={isMuted}
@@ -244,13 +246,16 @@ export function Slideshow({ items, startIndex, onClose }: SlideshowProps) {
                     top: -200 * (zoomScale - 1),
                     bottom: 200 * (zoomScale - 1)
                   }}
-                  animate={{
-                    scale: zoomScale,
-                    x: zoomScale === 1 ? 0 : undefined,
-                    y: zoomScale === 1 ? 0 : undefined,
-                  }}
-                  // Active Ken Burns pan/zoom when scale is 1
-                  {...(zoomScale === 1 ? { animate: scaleAnimation, transition: { duration: 5, ease: 'linear' } } : {})}
+                  animate={
+                    zoomScale === 1
+                      ? scaleAnimation
+                      : {
+                          scale: zoomScale,
+                          x: undefined,
+                          y: undefined,
+                        }
+                  }
+                  transition={zoomScale === 1 ? { duration: 5, ease: 'linear' } : undefined}
                   className={`relative w-full h-full flex items-center justify-center ${
                     zoomScale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'
                   }`}

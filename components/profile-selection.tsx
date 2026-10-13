@@ -6,10 +6,14 @@ import Image from 'next/image'
 interface ProfileSelectionProps {
   onSelectProfile: (profileName: string) => void
   avatarPath?: string
+  profileName?: string
 }
 
-export function ProfileSelection({ onSelectProfile, avatarPath = '/pfp.jpeg' }: ProfileSelectionProps) {
-  const profileName = "CapyBara"
+export function ProfileSelection({
+  onSelectProfile,
+  avatarPath = '/pfp.jpeg',
+  profileName = 'CapyBara',
+}: ProfileSelectionProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#141414] select-none font-sans">

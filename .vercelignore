@@ -1,0 +1,10 @@
+# Ignore raw media folders
+toAdd/
+photos/
+test.txt
+scripts/
+
+# Standard ignores
+.git
+.env*.local
+.env

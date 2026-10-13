@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Info, Play, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Info, Play, ChevronLeft, ChevronRight, Pencil, Camera } from 'lucide-react'
 import Image from 'next/image'
 import { BackgroundGradient } from './background-gradient'
 import type { MediaItem } from '@/types/media'
@@ -10,11 +10,15 @@ import type { MediaItem } from '@/types/media'
 interface HeroBannerProps {
   items: MediaItem[]
   onPlay: (item: MediaItem) => void
+  isEditMode?: boolean
+  onEditSlide?: (item: MediaItem) => void
 }
 
-export function HeroBanner({ items, onPlay }: HeroBannerProps) {
+export function HeroBanner({ items, onPlay, isEditMode = false, onEditSlide }: HeroBannerProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [isVisible, setIsVisible] = useState(true)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const sectionRef = useRef<HTMLElement>(null)
 
   const currentItem = items[currentIndex] || items[0]
 
@@ -26,18 +30,34 @@ export function HeroBanner({ items, onPlay }: HeroBannerProps) {
     setCurrentIndex((prev) => (prev - 1 + items.length) % items.length)
   }
 
-  // Set up the 7-second timer for rotating the photos
+  // Observe visibility to pause auto-rotation when scrolled out of viewport
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting)
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  // Set up the 7-second timer for rotating the photos, only when banner is in view
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current)
+    if (!isVisible || items.length <= 1) return
 
     timerRef.current = setInterval(() => {
       handleNext()
-    }, 7000) // 7 seconds
+    }, 7000)
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [currentIndex, items.length])
+  }, [currentIndex, items.length, isVisible])
 
   if (!currentItem) return null
 
@@ -46,24 +66,23 @@ export function HeroBanner({ items, onPlay }: HeroBannerProps) {
     : `A beautiful snapshot of "${currentItem.title}" taken on ${new Date(currentItem.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.`)
 
   return (
-    <section className="relative h-[70vh] min-h-[520px] w-full overflow-hidden bg-black select-none">
+    <section ref={sectionRef} className="relative h-[70vh] min-h-[520px] w-full overflow-hidden bg-black select-none">
       {/* Background media with smooth cross-fade */}
       <div className="absolute inset-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            initial={{ opacity: 0, scale: 1.08 }}
-            animate={{ opacity: 1, scale: 1.03 }}
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1.02 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.9, ease: 'easeInOut' }}
+            transition={{ duration: 0.7, ease: 'easeInOut' }}
             className="absolute inset-y-0 -inset-x-2 size-full"
           >
             <Image
               src={currentItem.thumbnail}
               alt={currentItem.title}
               fill
-              priority
-              loading="eager"
+              priority={currentIndex === 0}
               sizes="100vw"
               className="object-cover size-full"
             />
@@ -72,14 +91,41 @@ export function HeroBanner({ items, onPlay }: HeroBannerProps) {
       </div>
 
 
+      {/* Top-Right Quick Edit Pill */}
+      {isEditMode && onEditSlide && (
+        <button
+          type="button"
+          onClick={() => onEditSlide(currentItem)}
+          className="absolute top-20 right-6 z-30 flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur-md shadow-xl hover:bg-black/80 hover:border-primary transition-all active:scale-95"
+          title="Replace Photo / Video or change captions for this slide"
+        >
+          <Camera className="size-3.5 text-primary" />
+          <span>Edit Slide Media</span>
+          <Pencil className="size-3 text-white/70" />
+        </button>
+      )}
+
       {/* Content Overlay */}
       <div className="relative z-10 mx-auto flex h-full max-w-[1600px] flex-col justify-end px-4 pb-6 sm:px-8 sm:pb-10">
         <div className="max-w-xl text-left">
-          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-medium uppercase tracking-widest text-primary backdrop-blur-sm">
-            Featured Memory
-          </span>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-medium uppercase tracking-widest text-primary backdrop-blur-sm">
+              {currentItem.type === 'video' ? 'Featured Video Clip' : 'Featured Memory'}
+            </span>
+
+            {isEditMode && onEditSlide && (
+              <button
+                type="button"
+                onClick={() => onEditSlide(currentItem)}
+                title="Edit Headline & Story"
+                className="flex size-6 items-center justify-center rounded-full bg-primary/20 border border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+              >
+                <Pencil className="size-3" />
+              </button>
+            )}
+          </div>
           
-          <div className="relative mt-2">
+          <div className="relative mt-2 group/title flex items-start gap-3">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentIndex}
@@ -129,6 +175,17 @@ export function HeroBanner({ items, onPlay }: HeroBannerProps) {
               <ChevronRight className="size-4" />
               Next Memory
             </button>
+            
+            {isEditMode && onEditSlide && (
+              <button
+                type="button"
+                onClick={() => onEditSlide(currentItem)}
+                className="flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary backdrop-blur-sm hover:bg-primary/20 transition-colors"
+              >
+                <Pencil className="size-3.5" />
+                <span>Customize</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

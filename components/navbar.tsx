@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Film } from 'lucide-react'
+import { Film, Pencil, Lock } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { useScrolled } from '@/hooks/use-scrolled'
@@ -15,6 +15,12 @@ interface NavbarProps {
   activeLink?: string
   onLinkClick?: (link: string) => void
   profileUrl?: string
+  brandName?: string
+  isEditMode?: boolean
+  isCreatorUnlocked?: boolean
+  onEditBrand?: () => void
+  onEditProfile?: () => void
+  onUnlockCreator?: () => void
 }
 
 export function Navbar({
@@ -23,6 +29,12 @@ export function Navbar({
   activeLink = 'Home',
   onLinkClick,
   profileUrl = '/pfp.jpeg',
+  brandName = 'RDXThunder',
+  isEditMode = false,
+  isCreatorUnlocked = false,
+  onEditBrand,
+  onEditProfile,
+  onUnlockCreator,
 }: NavbarProps) {
   const scrolled = useScrolled(32)
 
@@ -39,16 +51,36 @@ export function Navbar({
       )}
     >
       <nav className="mx-auto flex h-16 max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-8">
-        <div className="flex items-center gap-8">
-          {/* Brand */}
-          <a href="#top" className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Film className="size-4" />
-            </span>
-            <span className="font-serif text-xl font-bold tracking-tight text-foreground">
-              Finding<span className="text-primary">Yukti</span>
-            </span>
-          </a>
+        <div className="flex items-center gap-6 sm:gap-8">
+          {/* Brand with Edit Pencil */}
+          <div className="relative group flex items-center gap-2">
+            <a href="#top" className="flex items-center gap-2">
+              <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-md shadow-primary/20">
+                <Film className="size-4" />
+              </span>
+              <span className="font-serif text-xl font-bold tracking-tight text-foreground">
+                {brandName.length > 3 ? (
+                  <>
+                    {brandName.slice(0, 3)}
+                    <span className="text-primary">{brandName.slice(3)}</span>
+                  </>
+                ) : (
+                  brandName
+                )}
+              </span>
+            </a>
+
+            {isEditMode && onEditBrand && (
+              <button
+                type="button"
+                onClick={onEditBrand}
+                title="Edit Site Brand Name"
+                className="flex size-6 items-center justify-center rounded-full bg-primary/20 border border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground transition-all ml-1 shadow-sm"
+              >
+                <Pencil className="size-3" />
+              </button>
+            )}
+          </div>
 
           {/* Links */}
           <ul className="hidden items-center gap-6 md:flex">
@@ -73,20 +105,57 @@ export function Navbar({
 
         {/* Right cluster */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Subtle Creator Unlock trigger for paying clients */}
+          {!isCreatorUnlocked && onUnlockCreator && (
+            <button
+              type="button"
+              onClick={onUnlockCreator}
+              className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:bg-white/10 hover:text-white transition-all shadow-sm"
+              title="Creator Login (Enter PIN to customize)"
+            >
+              <Lock className="size-3 text-primary" />
+              <span className="hidden sm:inline">Creator</span>
+            </button>
+          )}
+
           <SearchBar value={search} onChange={onSearchChange} />
-          <button
-            type="button"
-            aria-label="Your profile"
-            className="size-9 overflow-hidden rounded-full border border-border transition-transform hover:scale-105"
-          >
-            <Image
-              src={profileUrl}
-              alt="Your profile"
-              width={36}
-              height={36}
-              className="size-full object-cover"
-            />
-          </button>
+          
+          {/* Profile Button with Pencil indicator */}
+          <div className="relative group">
+            <button
+              type="button"
+              onClick={isEditMode && onEditProfile ? onEditProfile : undefined}
+              aria-label="Your profile"
+              className={cn(
+                "relative size-9 overflow-hidden rounded-full border border-border transition-transform hover:scale-105",
+                isEditMode && "ring-2 ring-primary/60 cursor-pointer"
+              )}
+            >
+              <Image
+                src={profileUrl}
+                alt="Your profile"
+                width={36}
+                height={36}
+                className="size-full object-cover"
+              />
+              {isEditMode && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Pencil className="size-3.5 text-primary" />
+                </div>
+              )}
+            </button>
+
+            {isEditMode && onEditProfile && (
+              <button
+                type="button"
+                onClick={onEditProfile}
+                title="Edit Profile"
+                className="absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md"
+              >
+                <Pencil className="size-2.5" />
+              </button>
+            )}
+          </div>
         </div>
       </nav>
     </motion.header>

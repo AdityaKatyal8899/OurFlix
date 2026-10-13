@@ -16,13 +16,15 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'MemoryFlix — Your Life, Beautifully Streamed',
+  title: 'MyFlix — Personal Memory Streaming Studio',
   description:
-    'A cinematic gallery for your personal memories. Browse photos and videos of your best moments, trips, and favorites in a premium streaming experience.',
-  generator: 'v0.app',
+    'Turn your special moments into a personalized Netflix streaming experience for your favorite person.',
 }
 
 export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
   colorScheme: 'dark',
   themeColor: '#141414',
 }
