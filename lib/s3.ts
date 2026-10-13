@@ -35,11 +35,9 @@ export async function getPresignedUrl(key: string): Promise<string> {
     return key
   }
 
-  // If the key is a local static asset (e.g. built-in demo media in /toAdd, pfp, intro audio),
+  // If the key is a local static asset checked into public/ repo storage (capybara, pfp, intro audio, placeholder),
   // serve it directly from Next.js static public storage so Next.js Image Optimization can process it locally
   if (
-    key.startsWith('/toAdd/') ||
-    key.startsWith('toAdd/') ||
     key.startsWith('/capybara/') ||
     key.startsWith('capybara/') ||
     key.startsWith('/pfp.') ||
@@ -47,7 +45,9 @@ export async function getPresignedUrl(key: string): Promise<string> {
     key.startsWith('/intro.') ||
     key.startsWith('intro.') ||
     key.startsWith('/placeholder') ||
-    key.startsWith('placeholder')
+    key.startsWith('placeholder') ||
+    key.startsWith('/mainChar.') ||
+    key.startsWith('mainChar.')
   ) {
     return key.startsWith('/') ? key : `/${key}`
   }
