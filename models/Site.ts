@@ -13,6 +13,8 @@ export interface ISite extends Document {
   isPaid: boolean
   plan?: 'mini' | 'premier' | 'vip'
   stripeSessionId?: string
+  transactionId?: string
+  paidAt?: Date
   createdAt: Date
   updatedAt: Date
 }
@@ -84,6 +86,12 @@ const SiteSchema = new Schema<ISite>(
     },
     stripeSessionId: {
       type: String,
+    },
+    transactionId: {
+      type: String,
+    },
+    paidAt: {
+      type: Date,
     },
   },
   {

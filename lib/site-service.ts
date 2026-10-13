@@ -15,6 +15,9 @@ export interface SiteData {
   mediaItems: MediaItem[]
   isPaid: boolean
   plan?: 'mini' | 'premier' | 'vip'
+  stripeSessionId?: string
+  transactionId?: string
+  paidAt?: Date | string
 }
 
 // In-memory fallback if MONGODB_URI is not set yet in environment
@@ -69,6 +72,9 @@ export async function getSiteBySlug(rawSlug: string): Promise<SiteData | null> {
           mediaItems: siteDoc.mediaItems || [],
           isPaid: siteDoc.isPaid ?? true,
           plan: siteDoc.plan || (slug === 'capybara' ? 'mini' : 'premier'),
+          stripeSessionId: siteDoc.stripeSessionId,
+          transactionId: siteDoc.transactionId,
+          paidAt: siteDoc.paidAt,
         }
       }
 

@@ -191,11 +191,16 @@ export function LandingPage() {
     if (e) e.preventDefault()
     const targetSlug = cleanSlug || selectedTemplate.sampleSlug
 
+    if (targetSlug === 'rdxthunder' || targetSlug === 'capybara' || targetSlug === 'demo') {
+      router.push(`/${targetSlug}`)
+      return
+    }
+
     setIsCreating(true)
     setErrorMessage('')
 
     try {
-      const res = await fetch('/api/sites', {
+      const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -210,12 +215,13 @@ export function LandingPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        if (res.status === 409) {
-          router.push(`/${targetSlug}?setup=true`)
-          return
-        }
-        setErrorMessage(data.error || 'Failed to create site')
+        setErrorMessage(data.error || 'Failed to initialize payment')
         setIsCreating(false)
+        return
+      }
+
+      if (data.url) {
+        window.location.href = data.url
         return
       }
 

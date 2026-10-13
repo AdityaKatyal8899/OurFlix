@@ -1,19 +1,63 @@
 import ReactDOM from 'react-dom'
 import { MemoryFlix } from '@/components/memory-flix'
 import { getSiteBySlug, resolveSiteMediaUrls } from '@/lib/site-service'
+import { stripe } from '@/lib/stripe'
+import { connectToDatabase } from '@/lib/mongodb'
+import { Site } from '@/models/Site'
 import Link from 'next/link'
-import { Film, Sparkles, ArrowRight, Lock } from 'lucide-react'
+import { Film, Sparkles, ArrowRight, Lock, CreditCard } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
   params: Promise<{ slug: string }>
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export default async function SlugPage({ params }: PageProps) {
+export default async function SlugPage({ params, searchParams }: PageProps) {
   const { slug } = await params
-  const site = await getSiteBySlug(slug)
+  const sParams = (await searchParams) || {}
+  const sessionId = typeof sParams.session_id === 'string' ? sParams.session_id : undefined
 
+  let site = await getSiteBySlug(slug)
+
+  // Direct checkout return verification
+  if (sessionId) {
+    try {
+      const session = await stripe.checkout.sessions.retrieve(sessionId)
+      if (
+        session.payment_status === 'paid' &&
+        session.metadata?.slug?.toLowerCase() === slug.toLowerCase()
+      ) {
+        const transactionId =
+          typeof session.payment_intent === 'string'
+            ? session.payment_intent
+            : session.id
+        const plan = (session.metadata?.plan as 'mini' | 'premier' | 'vip') || 'premier'
+
+        await connectToDatabase()
+        await Site.findOneAndUpdate(
+          { slug: slug.toLowerCase() },
+          {
+            $set: {
+              isPaid: true,
+              plan,
+              transactionId,
+              stripeSessionId: session.id,
+              paidAt: new Date(),
+            },
+          },
+          { new: true }
+        )
+        // Refresh site data after confirming payment
+        site = await getSiteBySlug(slug)
+      }
+    } catch (err) {
+      console.error('Error verifying Stripe session on page load:', err)
+    }
+  }
+
+  // If site not found
   if (!site) {
     return (
       <div className="relative min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 selection:bg-primary selection:text-white">
@@ -35,10 +79,10 @@ export default async function SlugPage({ params }: PageProps) {
 
           <div className="pt-2 flex flex-col gap-3">
             <Link
-              href={`/rdxthunder?setup=true&claim=${encodeURIComponent(slug)}`}
+              href={`/?slug=${encodeURIComponent(slug)}#create`}
               className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-4 shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-95"
             >
-              <span>Claim &quot;{slug}&quot; for ₹99</span>
+              <span>Claim &quot;{slug}&quot; from ₹49</span>
               <ArrowRight className="size-4" />
             </Link>
 
@@ -48,6 +92,50 @@ export default async function SlugPage({ params }: PageProps) {
             >
               <Sparkles className="size-4 text-amber-400" />
               <span>Explore Demo Stream (RDXThunder)</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Paywall: If site exists but is unpaid
+  const isDemoSite = slug === 'rdxthunder' || slug === 'capybara' || slug === 'demo'
+  if (!site.isPaid && !isDemoSite) {
+    const planName = site.plan === 'mini' ? 'Mini Reel (₹49)' : site.plan === 'vip' ? 'VIP Box Set (₹199)' : 'Premier Blockbuster (₹99)'
+    return (
+      <div className="relative min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 selection:bg-primary selection:text-white">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-black to-black pointer-events-none" />
+
+        <div className="relative z-10 max-w-md w-full text-center space-y-6 bg-zinc-950/80 border border-white/10 rounded-2xl p-8 backdrop-blur-2xl shadow-2xl">
+          <div className="mx-auto size-16 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/20">
+            <Lock className="size-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-2xl font-extrabold tracking-tight">
+              Activation Required
+            </h1>
+            <p className="text-sm text-zinc-400">
+              <span className="font-semibold text-white">myflix.domain/{slug}</span> is reserved. Complete payment for the <span className="text-primary font-bold">{planName}</span> to unlock your creator portal and media upload.
+            </p>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-3">
+            <Link
+              href={`/?slug=${encodeURIComponent(slug)}#create`}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-4 shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-95"
+            >
+              <CreditCard className="size-4" />
+              <span>Complete Payment</span>
+              <ArrowRight className="size-4" />
+            </Link>
+
+            <Link
+              href="/"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 font-medium py-2.5 px-4 transition-colors text-sm"
+            >
+              <span>Back to Home</span>
             </Link>
           </div>
         </div>
