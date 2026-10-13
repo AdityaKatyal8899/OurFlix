@@ -63,7 +63,7 @@ const TEMPLATES: Template[] = [
     categories: ['💖 HER', '✨ Cute Moments', '🌸 Random Smiles', '💌 Letters to You'],
     accentColor: 'from-rose-600/30 via-red-900/10 to-transparent',
     demoUrl: '/rdxthunder',
-    previewImage: '/toAdd/mainChar.jpg',
+    previewImage: '/mainChar.jpg',
     description: 'Cinematic hero trailer, emotional slideshow, custom background song, and romantic category rows.',
   },
   {
@@ -89,7 +89,7 @@ const TEMPLATES: Template[] = [
     categories: ['🎂 Year in Review', '🌟 Why You Are Special', '🎬 Blockbuster Moments', '🥂 Cheers to More'],
     accentColor: 'from-amber-600/30 via-yellow-900/10 to-transparent',
     demoUrl: '/rdxthunder',
-    previewImage: '/toAdd/IMG_7690.jpg',
+    previewImage: '/capybara/sunset.jpg',
     description: 'Chrono-timeline memory reel, congratulatory audio greeting, and keepsake digital archive.',
   },
 ]
