@@ -2,6 +2,7 @@ import ReactDOM from 'react-dom'
 import { MemoryFlix } from '@/components/memory-flix'
 import { getSiteBySlug, resolveSiteMediaUrls } from '@/lib/site-service'
 import { stripe } from '@/lib/stripe'
+import { getCashfreeOrder } from '@/lib/cashfree'
 import { connectToDatabase } from '@/lib/mongodb'
 import { Site } from '@/models/Site'
 import Link from 'next/link'
@@ -18,10 +19,45 @@ export default async function SlugPage({ params, searchParams }: PageProps) {
   const { slug } = await params
   const sParams = (await searchParams) || {}
   const sessionId = typeof sParams.session_id === 'string' ? sParams.session_id : undefined
+  const orderId = typeof sParams.order_id === 'string' ? sParams.order_id : undefined
 
   let site = await getSiteBySlug(slug)
 
-  // Direct checkout return verification
+  // 1. Direct Cashfree checkout return verification
+  if (orderId) {
+    try {
+      const cfOrder = await getCashfreeOrder(orderId)
+      if (
+        cfOrder.order_status === 'PAID' &&
+        cfOrder.order_tags?.slug?.toLowerCase() === slug.toLowerCase()
+      ) {
+        const transactionId = cfOrder.cf_order_id || cfOrder.order_id
+        const plan = (cfOrder.order_tags?.plan as 'mini' | 'premier' | 'vip') || 'premier'
+
+        await connectToDatabase()
+        await Site.findOneAndUpdate(
+          { slug: slug.toLowerCase() },
+          {
+            $set: {
+              isPaid: true,
+              plan,
+              transactionId,
+              cashfreeOrderId: cfOrder.order_id,
+              paidAt: new Date(),
+              paymentProvider: 'cashfree',
+            },
+          },
+          { new: true }
+        )
+        // Refresh site data after confirming payment
+        site = await getSiteBySlug(slug)
+      }
+    } catch (err) {
+      console.error('Error verifying Cashfree order on page load:', err)
+    }
+  }
+
+  // 2. Direct Stripe checkout return verification
   if (sessionId) {
     try {
       const session = await stripe.checkout.sessions.retrieve(sessionId)
@@ -45,6 +81,7 @@ export default async function SlugPage({ params, searchParams }: PageProps) {
               transactionId,
               stripeSessionId: session.id,
               paidAt: new Date(),
+              paymentProvider: 'stripe',
             },
           },
           { new: true }

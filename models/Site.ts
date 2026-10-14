@@ -13,6 +13,9 @@ export interface ISite extends Document {
   isPaid: boolean
   plan?: 'mini' | 'premier' | 'vip'
   stripeSessionId?: string
+  cashfreeOrderId?: string
+  cashfreePaymentSessionId?: string
+  paymentProvider?: 'cashfree' | 'stripe'
   transactionId?: string
   paidAt?: Date
   createdAt: Date
@@ -86,6 +89,17 @@ const SiteSchema = new Schema<ISite>(
     },
     stripeSessionId: {
       type: String,
+    },
+    cashfreeOrderId: {
+      type: String,
+    },
+    cashfreePaymentSessionId: {
+      type: String,
+    },
+    paymentProvider: {
+      type: String,
+      enum: ['cashfree', 'stripe'],
+      default: 'cashfree',
     },
     transactionId: {
       type: String,

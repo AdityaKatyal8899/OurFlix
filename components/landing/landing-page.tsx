@@ -200,7 +200,8 @@ export function LandingPage() {
     setErrorMessage('')
 
     try {
-      const res = await fetch('/api/checkout', {
+      // 1. Initialize Cashfree order
+      const res = await fetch('/api/cashfree/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -220,8 +221,16 @@ export function LandingPage() {
         return
       }
 
-      if (data.url) {
-        window.location.href = data.url
+      // 2. Launch Cashfree UPI / Card Checkout
+      if (data.paymentSessionId) {
+        const { load } = await import('@cashfreepayments/cashfree-js')
+        const mode = process.env.NEXT_PUBLIC_CASHFREE_ENV === 'production' ? 'production' : 'sandbox'
+        const cashfree = await load({ mode })
+        
+        await cashfree.checkout({
+          paymentSessionId: data.paymentSessionId,
+          redirectTarget: '_self',
+        })
         return
       }
 
