@@ -3,6 +3,7 @@ import { getCashfreeOrder } from '@/lib/cashfree'
 import { stripe } from '@/lib/stripe'
 import { connectToDatabase } from '@/lib/mongodb'
 import { Site } from '@/models/Site'
+import { slugBloomFilter } from '@/lib/bloom-filter'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,6 +43,7 @@ export default async function PaymentCallbackPage({ searchParams }: CallbackProp
             },
             { new: true }
           )
+          slugBloomFilter.add(slug)
         }
 
         redirect(
@@ -99,6 +101,7 @@ export default async function PaymentCallbackPage({ searchParams }: CallbackProp
             },
             { new: true }
           )
+          slugBloomFilter.add(slug)
         }
 
         const amount = session.amount_total ? (session.amount_total / 100).toString() : '99'

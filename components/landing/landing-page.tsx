@@ -20,6 +20,8 @@ import {
   Flame,
   Zap,
   Check,
+  AlertCircle,
+  XCircle,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -186,6 +188,46 @@ export function LandingPage() {
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
+
+  // Live Slug Availability Tracking (Powered by Bloom Filter & DB fallback)
+  const [slugStatus, setSlugStatus] = useState<{
+    status: 'idle' | 'checking' | 'available' | 'taken' | 'reserved'
+    message?: string
+    isDemo?: boolean
+    suggestions?: string[]
+  }>({ status: 'idle' })
+
+  useEffect(() => {
+    if (!cleanSlug || cleanSlug.length < 2) {
+      setSlugStatus({ status: 'idle' })
+      return
+    }
+
+    setSlugStatus({ status: 'checking' })
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/slugs/check?slug=${encodeURIComponent(cleanSlug)}`)
+        const data = await res.json()
+        if (data.available) {
+          setSlugStatus({ status: 'available' })
+        } else if (data.isDemo) {
+          setSlugStatus({ status: 'reserved', isDemo: true, message: data.reason })
+        } else if (data.isReserved) {
+          setSlugStatus({ status: 'reserved', message: data.reason, suggestions: data.suggestions })
+        } else {
+          setSlugStatus({
+            status: 'taken',
+            message: data.reason || 'Already claimed by another creator',
+            suggestions: data.suggestions,
+          })
+        }
+      } catch {
+        setSlugStatus({ status: 'idle' })
+      }
+    }, 280)
+
+    return () => clearTimeout(timer)
+  }, [cleanSlug])
 
   const handleCreateSite = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -443,7 +485,17 @@ export function LandingPage() {
                 onSubmit={handleCreateSite}
                 className="p-1.5 sm:p-2 rounded-2xl bg-zinc-900/90 border border-white/15 shadow-2xl backdrop-blur-md flex flex-col sm:flex-row gap-2 w-full max-w-full min-w-0"
               >
-                <div className="flex-1 min-w-0 flex items-center px-2.5 sm:px-3 py-2.5 sm:py-0 bg-black/60 rounded-xl border border-white/5 focus-within:border-primary/60 transition-colors w-full">
+                <div
+                  className={`flex-1 min-w-0 flex items-center px-2.5 sm:px-3 py-2.5 sm:py-0 bg-black/60 rounded-xl transition-all w-full ${
+                    slugStatus.status === 'available'
+                      ? 'border border-emerald-500/50 shadow-sm shadow-emerald-500/20'
+                      : slugStatus.status === 'taken'
+                      ? 'border border-rose-500/50'
+                      : slugStatus.status === 'reserved'
+                      ? 'border border-amber-500/50'
+                      : 'border border-white/5 focus-within:border-primary/60'
+                  }`}
+                >
                   <span className="text-zinc-500 font-mono text-[11px] sm:text-sm select-none shrink-0">
                     myflix.domain/
                   </span>
@@ -454,22 +506,106 @@ export function LandingPage() {
                     placeholder="your-name-here"
                     className="w-full min-w-0 bg-transparent font-semibold text-xs sm:text-base text-white placeholder-zinc-600 focus:outline-none pl-1"
                   />
+                  {slugStatus.status === 'checking' && (
+                    <span className="text-xs text-zinc-500 animate-spin mr-1 shrink-0">⏳</span>
+                  )}
+                  {slugStatus.status === 'available' && (
+                    <CheckCircle2 className="size-4 text-emerald-400 shrink-0 mr-1" />
+                  )}
+                  {slugStatus.status === 'taken' && (
+                    <XCircle className="size-4 text-rose-400 shrink-0 mr-1" />
+                  )}
+                  {slugStatus.status === 'reserved' && (
+                    <AlertCircle className="size-4 text-amber-400 shrink-0 mr-1" />
+                  )}
                 </div>
 
                 <button
                   type="submit"
-                  disabled={isCreating}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold py-2.5 sm:py-3.5 px-4 sm:px-6 shadow-xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 text-xs sm:text-sm whitespace-nowrap cursor-pointer shrink-0"
+                  disabled={isCreating || slugStatus.status === 'taken'}
+                  className={`w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl text-white font-bold py-2.5 sm:py-3.5 px-4 sm:px-6 shadow-xl transition-all text-xs sm:text-sm whitespace-nowrap cursor-pointer shrink-0 ${
+                    slugStatus.status === 'taken'
+                      ? 'bg-zinc-800 text-zinc-500 border border-white/5 cursor-not-allowed'
+                      : slugStatus.isDemo
+                      ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30 active:scale-95'
+                      : 'bg-primary hover:bg-primary/90 shadow-primary/30 hover:scale-[1.02] active:scale-95 disabled:opacity-50'
+                  }`}
                 >
                   {isCreating ? (
                     <span className="inline-block animate-spin mr-1">⏳</span>
+                  ) : slugStatus.isDemo ? (
+                    <Play className="size-4 fill-current shrink-0" />
                   ) : (
                     <Zap className="size-4 shrink-0" />
                   )}
-                  <span>Create For {selectedPlan.price}</span>
+                  <span>
+                    {slugStatus.isDemo
+                      ? `View Demo (${cleanSlug})`
+                      : slugStatus.status === 'taken'
+                      ? 'Username Taken'
+                      : `Create For ${selectedPlan.price}`}
+                  </span>
                   <ArrowRight className="size-4 shrink-0" />
                 </button>
               </form>
+
+              {/* Real-Time Live Availability Feedback Badge & Alternative Suggestions */}
+              {slugStatus.status !== 'idle' && (
+                <div className="mt-2 text-left space-y-1.5 px-1">
+                  {slugStatus.status === 'checking' && (
+                    <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
+                      <span className="size-1.5 rounded-full bg-zinc-400 animate-ping" />
+                      <span>Checking availability with Bloom filter...</span>
+                    </div>
+                  )}
+
+                  {slugStatus.status === 'available' && (
+                    <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+                      <CheckCircle2 className="size-3.5 shrink-0" />
+                      <span>myflix.domain/{cleanSlug} is available! Ready to claim.</span>
+                    </div>
+                  )}
+
+                  {slugStatus.status === 'reserved' && (
+                    <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      <span>{slugStatus.message || 'Reserved stream'}</span>
+                      {slugStatus.isDemo && (
+                        <Link
+                          href={`/${cleanSlug}`}
+                          className="text-white underline ml-1 hover:text-amber-300"
+                        >
+                          Explore Demo &rarr;
+                        </Link>
+                      )}
+                    </div>
+                  )}
+
+                  {slugStatus.status === 'taken' && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1.5 text-xs text-rose-400 font-semibold">
+                        <XCircle className="size-3.5 shrink-0" />
+                        <span>myflix.domain/{cleanSlug} is already claimed.</span>
+                      </div>
+                      {slugStatus.suggestions && slugStatus.suggestions.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                          <span className="text-[11px] text-zinc-400">Available alternatives:</span>
+                          {slugStatus.suggestions.map((sug) => (
+                            <button
+                              key={sug}
+                              type="button"
+                              onClick={() => setCustomSlug(sug)}
+                              className="px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-primary/20 hover:text-primary hover:border-primary/40 text-white font-mono text-[11px] border border-white/15 cursor-pointer transition-all"
+                            >
+                              +{sug}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {errorMessage && (
                 <p className="text-xs text-rose-400 mt-2 font-medium px-2 text-left">

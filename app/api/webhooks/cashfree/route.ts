@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCashfreeOrder } from '@/lib/cashfree'
 import { connectToDatabase } from '@/lib/mongodb'
 import { Site } from '@/models/Site'
+import { slugBloomFilter } from '@/lib/bloom-filter'
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
           { new: true }
         )
         console.log(`Cashfree payment confirmed for "${slug}". Transaction ID: ${transactionId}`)
+        slugBloomFilter.add(slug)
       }
     }
 
