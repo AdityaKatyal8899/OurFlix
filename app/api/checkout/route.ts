@@ -95,8 +95,8 @@ export async function POST(request: NextRequest) {
         slug,
         plan: planKey,
       },
-      success_url: `${origin}/${slug}?setup=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/?cancelled=true`,
+      success_url: `${origin}/payment/callback?session_id={CHECKOUT_SESSION_ID}&slug=${encodeURIComponent(slug)}`,
+      cancel_url: `${origin}/payment/failed?slug=${encodeURIComponent(slug)}`,
     })
 
     // Store session ID in site draft

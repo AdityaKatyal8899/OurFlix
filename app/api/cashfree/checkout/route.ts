@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       customerPhone: customerPhone?.replace(/\D/g, '') || '9999999999',
       customerEmail: customerEmail?.trim() || 'creator@myflix.com',
       customerName: profileName?.trim() || 'MyFlix Creator',
-      returnUrl: `${origin}/${slug}?setup=true&order_id={order_id}`,
+      returnUrl: `${origin}/payment/callback?order_id={order_id}&slug=${encodeURIComponent(slug)}`,
       notifyUrl: `${origin}/api/webhooks/cashfree`,
       orderNote: `MyFlix: ${slug} (${pricing.name})`,
       tags: {
