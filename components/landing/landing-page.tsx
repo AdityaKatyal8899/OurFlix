@@ -991,29 +991,52 @@ export function LandingPage() {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/10 py-10 px-3 sm:px-6 bg-black">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-5 text-xs text-zinc-500 text-center sm:text-left">
-          <div className="flex items-center justify-center gap-2">
-            <Film className="size-4 text-primary" />
-            <span className="font-bold text-zinc-300 uppercase tracking-wider">
-              My<span className="text-primary">Flix</span>
-            </span>
-            <span>&copy; {new Date().getFullYear()} MyFlix Studio.</span>
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-5 text-xs text-zinc-500 text-center sm:text-left">
+            <div className="flex items-center justify-center gap-2">
+              <Film className="size-4 text-primary" />
+              <span className="font-bold text-zinc-300 uppercase tracking-wider">
+                My<span className="text-primary">Flix</span>
+              </span>
+              <span>&copy; {new Date().getFullYear()} MyFlix Studio. All rights reserved.</span>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-6">
+              <Link href="/rdxthunder" className="hover:text-zinc-300 transition-colors">
+                Live Demo
+              </Link>
+              <button
+                type="button"
+                onClick={() => setIsUnlockModalOpen(true)}
+                className="hover:text-zinc-300 transition-colors"
+              >
+                Creator Login
+              </button>
+              <a href="#plans" className="text-primary hover:underline font-medium">
+                View Plans
+              </a>
+            </div>
           </div>
 
-          <div className="flex items-center justify-center gap-6">
-            <Link href="/rdxthunder" className="hover:text-zinc-300 transition-colors">
-              Live Demo
-            </Link>
-            <button
-              type="button"
-              onClick={() => setIsUnlockModalOpen(true)}
-              className="hover:text-zinc-300 transition-colors"
-            >
-              Creator Login
-            </button>
-            <a href="#plans" className="text-primary hover:underline font-medium">
-              View Plans
-            </a>
+          {/* Compliance & Policy Links for Payment Gateway Audit */}
+          <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-center sm:justify-between gap-3 text-[11px] text-zinc-500">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+              <Link href="/terms" className="hover:text-zinc-300 transition-colors">
+                Terms of Service
+              </Link>
+              <Link href="/privacy" className="hover:text-zinc-300 transition-colors">
+                Privacy Policy
+              </Link>
+              <Link href="/refund" className="hover:text-zinc-300 transition-colors">
+                Refund & Cancellation Policy
+              </Link>
+              <Link href="/contact" className="hover:text-zinc-300 transition-colors">
+                Contact Us
+              </Link>
+            </div>
+            <div className="text-zinc-600">
+              Secured by Cashfree Payments (UPI, Cards & Net Banking)
+            </div>
           </div>
         </div>
       </footer>
