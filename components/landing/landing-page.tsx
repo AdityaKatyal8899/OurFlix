@@ -45,10 +45,12 @@ interface Plan {
   id: 'mini' | 'premier' | 'vip'
   name: string
   price: string
+  period?: string
   badge?: string
   popular?: boolean
   description: string
   photoLimit: string
+  videoLimit: string
   rowLimit: string
   features: string[]
   ctaText: string
@@ -101,57 +103,64 @@ const PLANS: Plan[] = [
     id: 'mini',
     name: 'Mini Reel',
     price: '₹49',
+    period: '/year',
     badge: 'Budget Friendly',
     description: 'Essential highlights for quick gifts, birthdays, and cute memory previews.',
-    photoLimit: 'Up to 20 Photos',
+    photoLimit: '20 Photos',
+    videoLimit: '1 Video Clip',
     rowLimit: '2 Custom Rows',
     features: [
-      'Up to 20 Photos & Clips',
+      '1 Full Year Active Cloud Hosting',
+      'Up to 20 Photos',
+      '1 Video Clip (Hero Teaser)',
       '2 Custom Category Rows',
-      'Private 4-Digit Passcode',
-      'Personalized Link (myflix.me/name)',
-      '100% Ad-Free Lifetime Stream',
+      'Private 4-Digit Passcode Protection',
+      'Mobile, Tablet & TV Responsive Stream',
     ],
-    ctaText: 'Choose Mini (₹49)',
+    ctaText: 'Choose Mini (₹49/yr)',
   },
   {
     id: 'premier',
-    name: 'Blockbuster',
+    name: 'Premier Blockbuster',
     price: '₹99',
+    period: '/year',
     popular: true,
     badge: '🔥 Most Popular (75% Choose This)',
     description: 'The full-blown Netflix experience with hero billboard trailer & background song.',
-    photoLimit: 'Up to 60 Photos + 5 Videos',
-    rowLimit: 'Up to 5 Custom Rows',
+    photoLimit: '45 Photos',
+    videoLimit: '5 Video Clips',
+    rowLimit: '4 Custom Rows',
     features: [
-      'Up to 60 Photos + 5 Videos',
-      'Up to 5 Custom Category Rows',
-      '🎵 Background Music / Audio Gateway',
+      '1 Full Year Active Cloud Hosting',
+      'Up to 45 Photos',
+      '5 High-Bitrate Video Clips',
+      '4 Custom Category Rows',
+      '🎵 Custom Song & Intro Gateway Chime',
       '🎬 Top Hero Trailer Billboard',
-      'Fullscreen Slideshow Overlay',
-      'Private 4-Digit Passcode Lock',
-      'Direct Shareable Custom Link',
+      'In-Place Visual Studio Editor',
     ],
-    ctaText: 'Choose Premier (₹99)',
+    ctaText: 'Choose Premier (₹99/yr)',
   },
   {
     id: 'vip',
-    name: "Director's Cut",
+    name: 'VIP Box Set',
     price: '₹199',
+    period: '/year',
     badge: 'VIP Keepsake',
-    description: 'Unlimited photos, full HD video streaming, and permanent digital archive.',
-    photoLimit: 'Unlimited Photos & HD Videos',
-    rowLimit: 'Unlimited Rows',
+    description: 'Maximum memory capacity, high-bitrate video streaming, and VIP keepsake badge.',
+    photoLimit: '100 Photos',
+    videoLimit: '15 Video Clips',
+    rowLimit: '8 Custom Rows',
     features: [
-      'Unlimited Photos & Full HD Videos',
-      'Unlimited Category Rows',
-      '🎵 Custom Song & Audio Gateway',
-      '🎬 Top Billboard Hero Trailer',
-      'Priority Video Streaming Bandwidth',
-      'Permanent Keepsake Archive',
-      'VIP Direct Support',
+      '1 Full Year Active Cloud Hosting',
+      'Up to 100 Photos',
+      '15 High-Bitrate Video Clips',
+      '8 Custom Category Rows',
+      '🎵 Full Soundtrack & Audio Gateway',
+      '🎬 Top Billboard Hero Trailer FX',
+      'Priority S3 Upload & Streaming Speed',
     ],
-    ctaText: 'Choose VIP (₹199)',
+    ctaText: 'Choose VIP (₹199/yr)',
   },
 ]
 
@@ -728,13 +737,13 @@ export function LandingPage() {
             className="text-center max-w-2xl mx-auto space-y-2 mb-10 sm:mb-14"
           >
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-primary">
-              Simple, Flat Pricing
+              Transparent Yearly Plans
             </span>
             <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-              Choose Your Memory Stream Plan
+              1 Year of Cloud Streaming Included
             </h2>
             <p className="text-xs sm:text-base text-zinc-400 px-2 sm:px-0">
-              One-time payment. Zero recurring monthly fees. You keep your personalized stream forever.
+              Zero monthly surprises. Full access to your custom cinema stream for 365 days. Renew or expand capacity anytime.
             </p>
           </motion.div>
 
@@ -787,10 +796,12 @@ export function LandingPage() {
                         <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">
                           {plan.price}
                         </span>
-                        <span className="text-xs text-zinc-400 font-medium">one-time flat</span>
+                        <span className="text-xs text-zinc-400 font-medium">{plan.period || '/year'}</span>
                       </div>
-                      <div className="mt-1 flex items-center gap-2 text-xs text-zinc-300 font-semibold">
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-zinc-300 font-semibold">
                         <span className="text-primary">{plan.photoLimit}</span>
+                        <span>•</span>
+                        <span className="text-amber-400">{plan.videoLimit}</span>
                         <span>•</span>
                         <span>{plan.rowLimit}</span>
                       </div>
@@ -819,12 +830,74 @@ export function LandingPage() {
                       }`}
                     >
                       {isCurrentSelected && <Check className="size-4" />}
-                      <span>{isCurrentSelected ? `Selected (${plan.price})` : plan.ctaText}</span>
+                      <span>{isCurrentSelected ? `Selected (${plan.price}${plan.period || '/yr'})` : plan.ctaText}</span>
                     </button>
                   </div>
                 </div>
               )
             })}
+          </motion.div>
+
+          {/* In-Studio Micro-Upgrades Showcase */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6 }}
+            className="mt-12 rounded-2xl border border-white/10 bg-zinc-950/70 p-6 sm:p-8 backdrop-blur-md"
+          >
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/10 pb-5">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[11px] font-semibold text-amber-300 mb-1.5">
+                  <Sparkles className="size-3" />
+                  <span>Flexible In-Studio Add-ons</span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-white">
+                  Need More Space Later? Top Up Anytime with 1-Tap UPI
+                </h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Start with any plan today. You can unlock extra category rows, photos, or video clips directly inside your visual editor whenever you run out.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-5">
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-center space-y-1">
+                <span className="text-[10px] uppercase font-bold text-primary block">Rows</span>
+                <p className="text-xs font-bold text-white">+1 Movie Row</p>
+                <span className="text-sm font-black text-emerald-400 font-mono block">₹19</span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-center space-y-1">
+                <span className="text-[10px] uppercase font-bold text-primary block">Photos</span>
+                <p className="text-xs font-bold text-white">+10 Photos</p>
+                <span className="text-sm font-black text-emerald-400 font-mono block">₹29</span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-center space-y-1">
+                <span className="text-[10px] uppercase font-bold text-primary block">Videos</span>
+                <p className="text-xs font-bold text-white">+3 Video Clips</p>
+                <span className="text-sm font-black text-emerald-400 font-mono block">₹39</span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-center space-y-1">
+                <span className="text-[10px] uppercase font-bold text-primary block">Audio</span>
+                <p className="text-xs font-bold text-white">Song Intro</p>
+                <span className="text-sm font-black text-emerald-400 font-mono block">₹29</span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-center space-y-1">
+                <span className="text-[10px] uppercase font-bold text-primary block">Super Pack</span>
+                <p className="text-xs font-bold text-white">+25 Photos</p>
+                <span className="text-sm font-black text-emerald-400 font-mono block">₹59</span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-center space-y-1">
+                <span className="text-[10px] uppercase font-bold text-primary block">Hosting</span>
+                <p className="text-xs font-bold text-white">+1 Year Cloud</p>
+                <span className="text-sm font-black text-emerald-400 font-mono block">₹49/yr</span>
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>

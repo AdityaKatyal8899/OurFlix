@@ -21,6 +21,7 @@ function PaymentSuccessContent() {
   const slug = searchParams.get('slug') || ''
   const orderId = searchParams.get('order_id') || searchParams.get('session_id') || ''
   const amount = searchParams.get('amount') || '99'
+  const addon = searchParams.get('addon') || ''
   const [copied, setCopied] = useState(false)
 
   const origin =
@@ -73,13 +74,15 @@ function PaymentSuccessContent() {
         <div className="space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-400">
             <Sparkles className="size-3.5" />
-            <span>Payment Verified &bull; ₹{amount}</span>
+            <span>{addon ? `Upgrade Verified • ₹${amount}` : `Payment Verified • ₹${amount}`}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-            Your Memory Stream is Ready!
+            {addon ? `${addon} Unlocked!` : 'Your Memory Stream is Ready!'}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-sm mx-auto">
-            Your personalized Netflix streaming portal has been created and permanently claimed for you.
+            {addon
+              ? `Your studio capacity for "${slug}" has been expanded immediately.`
+              : 'Your personalized Netflix streaming portal has been created with 1-Year cloud hosting included.'}
           </p>
         </div>
 

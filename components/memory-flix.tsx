@@ -22,6 +22,8 @@ import { MediaModal } from './editor/media-modal'
 import { CategoryModal } from './editor/category-modal'
 import { OnboardingModal } from './editor/onboarding-modal'
 import { PasscodeModal } from './editor/passcode-modal'
+import { AddonModal } from './editor/addon-modal'
+import { CASHFREE_PRICING, CashfreeAddonKey } from '@/lib/cashfree'
 
 interface MemoryFlixProps {
   slug?: string
@@ -32,6 +34,12 @@ interface MemoryFlixProps {
   initialProfileName?: string
   initialCategories?: string[]
   initialPasscode?: string
+  initialPlan?: 'mini' | 'premier' | 'vip'
+  expiresAt?: Date | string
+  addonRows?: number
+  addonPhotos?: number
+  addonVideos?: number
+  hasCustomAudioAddon?: boolean
 }
 
 const STORAGE_KEY_MEDIA = 'ourflix_media_items'
@@ -53,6 +61,12 @@ export function MemoryFlix({
   initialProfileName = 'CapyBara',
   initialCategories = DEFAULT_CATEGORIES,
   initialPasscode = '1234',
+  initialPlan = 'premier',
+  expiresAt,
+  addonRows = 0,
+  addonPhotos = 0,
+  addonVideos = 0,
+  hasCustomAudioAddon = false,
 }: MemoryFlixProps) {
   // App navigation & viewer state
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null)
@@ -85,6 +99,37 @@ export function MemoryFlix({
   const [addingCardCategory, setAddingCardCategory] = useState<string | null>(null)
   const [editingCategory, setEditingCategory] = useState<string | null>(null)
   const [isAddingCategory, setIsAddingCategory] = useState(false)
+  const [isAddonModalOpen, setIsAddonModalOpen] = useState(false)
+  const [addonDefaultTab, setAddonDefaultTab] = useState<CashfreeAddonKey>('addon_row_19')
+
+  // Capacity Limits & Addon Calculations
+  const isDemoSite = slug === 'rdxthunder' || slug === 'capybara' || slug === 'demo'
+  const basePlan = CASHFREE_PRICING[initialPlan as 'mini' | 'premier' | 'vip'] || CASHFREE_PRICING.premier
+  const maxRows = isDemoSite ? 20 : basePlan.rowLimit + addonRows
+  const maxPhotos = isDemoSite ? 200 : basePlan.photoLimit + addonPhotos
+  const maxVideos = isDemoSite ? 50 : basePlan.videoLimit + addonVideos
+
+  const photoCount = useMemo(() => mediaItems.filter((m) => m.type !== 'video').length, [mediaItems])
+  const videoCount = useMemo(() => mediaItems.filter((m) => m.type === 'video').length, [mediaItems])
+  const rowCount = categories.length
+
+  const handleRequestAddCategory = () => {
+    if (!isDemoSite && rowCount >= maxRows) {
+      setAddonDefaultTab('addon_row_19')
+      setIsAddonModalOpen(true)
+      return
+    }
+    setIsAddingCategory(true)
+  }
+
+  const handleRequestAddCard = (categoryName: string) => {
+    if (!isDemoSite && photoCount >= maxPhotos && videoCount >= maxVideos) {
+      setAddonDefaultTab('addon_photos_29')
+      setIsAddonModalOpen(true)
+      return
+    }
+    setAddingCardCategory(categoryName)
+  }
 
   const slugSuffix = slug ? `_${slug}` : ''
 
@@ -353,6 +398,21 @@ export function MemoryFlix({
   }
 
   const handleSaveCard = (savedItem: MediaItem) => {
+    const isNew = !mediaItems.some((x) => x.id === savedItem.id)
+
+    if (isNew && !isDemoSite) {
+      if (savedItem.type === 'video' && videoCount >= maxVideos) {
+        setAddonDefaultTab('addon_videos_39')
+        setIsAddonModalOpen(true)
+        return
+      }
+      if (savedItem.type !== 'video' && photoCount >= maxPhotos) {
+        setAddonDefaultTab('addon_photos_29')
+        setIsAddonModalOpen(true)
+        return
+      }
+    }
+
     setMediaItems((prev) => {
       const exists = prev.some((x) => x.id === savedItem.id)
       if (exists) {
@@ -388,6 +448,12 @@ export function MemoryFlix({
   }
 
   const handleAddCategory = (newCat: string) => {
+    if (!isDemoSite && rowCount >= maxRows) {
+      setAddonDefaultTab('addon_row_19')
+      setIsAddonModalOpen(true)
+      setIsAddingCategory(false)
+      return
+    }
     if (!categories.includes(newCat)) {
       setCategories((prev) => [...prev, newCat])
     }
@@ -492,7 +558,7 @@ export function MemoryFlix({
                       items={row.items}
                       isEditMode={isCreatorAuthenticated && isEditMode}
                       onEditCard={(card) => setEditingCard(card)}
-                      onAddCard={(cat) => setAddingCardCategory(cat)}
+                      onAddCard={(cat) => handleRequestAddCard(cat)}
                       onEditCategory={(cat) => setEditingCategory(cat)}
                       onSelect={(item) => {
                         const index = row.items.findIndex((x) => x.id === item.id)
@@ -509,7 +575,7 @@ export function MemoryFlix({
                     <div className="px-4 sm:px-8 max-w-[1600px] mx-auto pt-4">
                       <button
                         type="button"
-                        onClick={() => setIsAddingCategory(true)}
+                        onClick={handleRequestAddCategory}
                         className="group flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-white/15 bg-white/[0.02] py-6 text-sm font-semibold text-white/80 transition-all hover:border-primary hover:bg-white/[0.05] hover:text-white"
                       >
                         <div className="flex size-7 items-center justify-center rounded-full bg-primary/20 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-sm">
@@ -531,10 +597,14 @@ export function MemoryFlix({
         <EditorToolbar
           isEditMode={isEditMode}
           onToggleEditMode={() => setIsEditMode((prev) => !prev)}
-          onAddCategoryRow={() => setIsAddingCategory(true)}
+          onAddCategoryRow={handleRequestAddCategory}
           onSave={handleSaveDraft}
           onReset={handleResetDraft}
           onLock={handleLockCreatorMode}
+          onOpenAddons={() => {
+            setAddonDefaultTab('addon_row_19')
+            setIsAddonModalOpen(true)
+          }}
         />
       )}
 
@@ -627,6 +697,22 @@ export function MemoryFlix({
         onClose={() => setIsPasscodeModalOpen(false)}
         correctPasscode={creatorPasscode}
         onSuccess={handlePasscodeSuccess}
+      />
+
+      {/* 10. In-Studio Micro-Upgrades & Capacity Modal */}
+      <AddonModal
+        isOpen={isAddonModalOpen}
+        onClose={() => setIsAddonModalOpen(false)}
+        slug={slug}
+        currentPlan={initialPlan}
+        photoCount={photoCount}
+        videoCount={videoCount}
+        rowCount={rowCount}
+        maxPhotos={maxPhotos}
+        maxVideos={maxVideos}
+        maxRows={maxRows}
+        expiresAt={expiresAt}
+        defaultSelected={addonDefaultTab}
       />
 
       {/* Cinematic Fullscreen Slideshow Overlay */}

@@ -12,6 +12,11 @@ export interface ISite extends Document {
   mediaItems: MediaItem[]
   isPaid: boolean
   plan?: 'mini' | 'premier' | 'vip'
+  expiresAt?: Date
+  addonRows?: number
+  addonPhotos?: number
+  addonVideos?: number
+  hasCustomAudioAddon?: boolean
   stripeSessionId?: string
   cashfreeOrderId?: string
   cashfreePaymentSessionId?: string
@@ -86,6 +91,25 @@ const SiteSchema = new Schema<ISite>(
       type: String,
       enum: ['mini', 'premier', 'vip'],
       default: 'premier',
+    },
+    expiresAt: {
+      type: Date,
+    },
+    addonRows: {
+      type: Number,
+      default: 0,
+    },
+    addonPhotos: {
+      type: Number,
+      default: 0,
+    },
+    addonVideos: {
+      type: Number,
+      default: 0,
+    },
+    hasCustomAudioAddon: {
+      type: Boolean,
+      default: false,
     },
     stripeSessionId: {
       type: String,

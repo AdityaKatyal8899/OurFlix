@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createCashfreeOrder, CASHFREE_PRICING, CashfreePlanKey } from '@/lib/cashfree'
+import {
+  createCashfreeOrder,
+  CASHFREE_PRICING,
+  CASHFREE_ADDONS,
+  CashfreePlanKey,
+  CashfreeAddonKey,
+} from '@/lib/cashfree'
 import { getSiteBySlug, saveSiteBySlug, getDefaultSiteData } from '@/lib/site-service'
 import { connectToDatabase } from '@/lib/mongodb'
 import { Site } from '@/models/Site'
@@ -10,6 +16,7 @@ export async function POST(request: NextRequest) {
     const {
       slug: rawSlug,
       plan: rawPlan = 'premier',
+      addon: rawAddon,
       brandName,
       profileName,
       creatorPasscode = '1234',
@@ -30,6 +37,57 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Determine host origin for redirect URLs
+    const origin =
+      request.headers.get('origin') ||
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      'https://myflix-amber-phi.vercel.app'
+
+    const cleanSlugId = slug.replace(/[^a-zA-Z0-9]/g, '').slice(0, 15)
+
+    // CASE A: IN-STUDIO MICRO-UPGRADE / ADD-ON PURCHASE
+    if (rawAddon && rawAddon in CASHFREE_ADDONS) {
+      const addonKey = rawAddon as CashfreeAddonKey
+      const addon = CASHFREE_ADDONS[addonKey]
+
+      const existingSite = await getSiteBySlug(slug)
+      if (!existingSite) {
+        return NextResponse.json(
+          { error: `Stream "${slug}" was not found.` },
+          { status: 404 }
+        )
+      }
+
+      const orderId = `addon_${cleanSlugId}_${Date.now()}`
+      const customerId = `cust_${cleanSlugId}_${Date.now().toString().slice(-4)}`
+
+      const order = await createCashfreeOrder({
+        orderId,
+        amount: addon.amount,
+        customerId,
+        customerPhone: customerPhone?.replace(/\D/g, '') || '9999999999',
+        customerEmail: customerEmail?.trim() || 'creator@myflix.com',
+        customerName: profileName?.trim() || existingSite.profileName || 'MyFlix Creator',
+        returnUrl: `${origin}/payment/callback?order_id={order_id}&slug=${encodeURIComponent(slug)}`,
+        notifyUrl: `${origin}/api/webhooks/cashfree`,
+        orderNote: `MyFlix Addon: ${slug} (${addon.name})`,
+        tags: {
+          slug,
+          orderType: 'addon',
+          addonKey,
+        },
+      })
+
+      return NextResponse.json({
+        success: true,
+        orderId: order.order_id,
+        paymentSessionId: order.payment_session_id,
+        cfOrderId: order.cf_order_id,
+        type: 'addon',
+      })
+    }
+
+    // CASE B: BASE STREAM YEARLY PLAN PURCHASE
     // Reserved routes check
     const reserved = [
       'api',
@@ -80,14 +138,7 @@ export async function POST(request: NextRequest) {
     }
     await saveSiteBySlug(slug, siteDraft)
 
-    // Determine host origin for redirect URLs
-    const origin =
-      request.headers.get('origin') ||
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      'https://myflix-amber-phi.vercel.app'
-
     // Cashfree order IDs must be alphanumeric and max 45 chars
-    const cleanSlugId = slug.replace(/[^a-zA-Z0-9]/g, '').slice(0, 15)
     const orderId = `myflix_${cleanSlugId}_${Date.now()}`
     const customerId = `cust_${cleanSlugId}_${Date.now().toString().slice(-4)}`
 
@@ -103,6 +154,7 @@ export async function POST(request: NextRequest) {
       orderNote: `MyFlix: ${slug} (${pricing.name})`,
       tags: {
         slug,
+        orderType: 'plan',
         plan: planKey,
       },
     })
@@ -125,6 +177,7 @@ export async function POST(request: NextRequest) {
       orderId: order.order_id,
       paymentSessionId: order.payment_session_id,
       cfOrderId: order.cf_order_id,
+      type: 'plan',
     })
   } catch (error: unknown) {
     console.error('Cashfree checkout error:', error)

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getCashfreeOrder } from '@/lib/cashfree'
+import { getCashfreeOrder, CASHFREE_ADDONS, CashfreeAddonKey } from '@/lib/cashfree'
 import { stripe } from '@/lib/stripe'
 import { connectToDatabase } from '@/lib/mongodb'
 import { Site } from '@/models/Site'
@@ -22,35 +22,67 @@ export default async function PaymentCallbackPage({ searchParams }: CallbackProp
     try {
       const cfOrder = await getCashfreeOrder(orderId)
       const slug = (cfOrder.order_tags?.slug || rawSlug || '').toLowerCase().trim()
+      const orderType = cfOrder.order_tags?.orderType || 'plan'
 
       if (cfOrder.order_status === 'PAID') {
         const transactionId = cfOrder.cf_order_id || cfOrder.order_id
-        const plan = (cfOrder.order_tags?.plan as 'mini' | 'premier' | 'vip') || 'premier'
 
         if (slug) {
           await connectToDatabase()
-          await Site.findOneAndUpdate(
-            { slug },
-            {
-              $set: {
-                isPaid: true,
-                plan,
-                transactionId,
-                cashfreeOrderId: cfOrder.order_id,
-                paidAt: new Date(),
-                paymentProvider: 'cashfree',
-              },
-            },
-            { new: true }
-          )
-          slugBloomFilter.add(slug)
-        }
 
-        redirect(
-          `/payment/success?slug=${encodeURIComponent(slug)}&order_id=${encodeURIComponent(
-            orderId
-          )}&amount=${encodeURIComponent(cfOrder.order_amount.toString())}`
-        )
+          if (orderType === 'addon') {
+            const addonKey = cfOrder.order_tags?.addonKey as CashfreeAddonKey
+            const addon = CASHFREE_ADDONS[addonKey]
+            if (addon) {
+              const updateQuery: Record<string, any> = {}
+              if (addon.type === 'row') updateQuery.$inc = { addonRows: addon.value }
+              if (addon.type === 'photos') updateQuery.$inc = { addonPhotos: addon.value }
+              if (addon.type === 'videos') updateQuery.$inc = { addonVideos: addon.value }
+              if (addon.type === 'audio') updateQuery.$set = { hasCustomAudioAddon: true }
+              if (addon.type === 'extension') {
+                const currentSite = await Site.findOne({ slug })
+                const currentExpiry = currentSite?.expiresAt ? new Date(currentSite.expiresAt) : new Date()
+                const newExpiry = new Date(Math.max(currentExpiry.getTime(), Date.now()) + 365 * 24 * 60 * 60 * 1000)
+                updateQuery.$set = { ...(updateQuery.$set || {}), expiresAt: newExpiry }
+              }
+              await Site.findOneAndUpdate({ slug }, updateQuery)
+            }
+
+            redirect(
+              `/payment/success?slug=${encodeURIComponent(slug)}&order_id=${encodeURIComponent(
+                orderId
+              )}&amount=${encodeURIComponent(cfOrder.order_amount.toString())}&addon=${encodeURIComponent(
+                addon?.name || 'Micro Upgrade'
+              )}`
+            )
+          } else {
+            const plan = (cfOrder.order_tags?.plan as 'mini' | 'premier' | 'vip') || 'premier'
+            const oneYearFromNow = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+
+            await Site.findOneAndUpdate(
+              { slug },
+              {
+                $set: {
+                  isPaid: true,
+                  plan,
+                  transactionId,
+                  cashfreeOrderId: cfOrder.order_id,
+                  paidAt: new Date(),
+                  expiresAt: oneYearFromNow,
+                  paymentProvider: 'cashfree',
+                },
+              },
+              { new: true }
+            )
+            slugBloomFilter.add(slug)
+
+            redirect(
+              `/payment/success?slug=${encodeURIComponent(slug)}&order_id=${encodeURIComponent(
+                orderId
+              )}&amount=${encodeURIComponent(cfOrder.order_amount.toString())}`
+            )
+          }
+        }
       } else {
         redirect(
           `/payment/failed?slug=${encodeURIComponent(slug)}&order_id=${encodeURIComponent(

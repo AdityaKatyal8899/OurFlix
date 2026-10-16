@@ -15,6 +15,11 @@ export interface SiteData {
   mediaItems: MediaItem[]
   isPaid: boolean
   plan?: 'mini' | 'premier' | 'vip'
+  expiresAt?: Date | string
+  addonRows?: number
+  addonPhotos?: number
+  addonVideos?: number
+  hasCustomAudioAddon?: boolean
   stripeSessionId?: string
   transactionId?: string
   paidAt?: Date | string

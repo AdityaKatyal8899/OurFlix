@@ -19,6 +19,7 @@ interface EditorToolbarProps {
   onSave: () => void
   onReset: () => void
   onLock?: () => void
+  onOpenAddons?: () => void
 }
 
 export function EditorToolbar({
@@ -28,6 +29,7 @@ export function EditorToolbar({
   onSave,
   onReset,
   onLock,
+  onOpenAddons,
 }: EditorToolbarProps) {
   const [saveToast, setSaveToast] = useState(false)
 
@@ -75,14 +77,28 @@ export function EditorToolbar({
 
         {/* Add Row Button (in Edit Mode) */}
         {isEditMode && (
-          <button
-            type="button"
-            onClick={onAddCategoryRow}
-            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <Plus className="size-3.5 text-primary" />
-            <span className="hidden sm:inline">Add Row</span>
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={onAddCategoryRow}
+              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              <Plus className="size-3.5 text-primary" />
+              <span className="hidden sm:inline">Add Row</span>
+            </button>
+
+            {onOpenAddons && (
+              <button
+                type="button"
+                onClick={onOpenAddons}
+                className="flex items-center gap-1 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-2.5 py-1 text-[11px] font-semibold text-amber-300 transition-colors"
+                title="Expand photo/row capacity with micro-upgrades"
+              >
+                <Sparkles className="size-3 text-amber-400" />
+                <span>Capacity</span>
+              </button>
+            )}
+          </>
         )}
 
         {/* Save Changes Button */}

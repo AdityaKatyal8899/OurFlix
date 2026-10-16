@@ -204,6 +204,12 @@ export default async function SlugPage({ params, searchParams }: PageProps) {
       initialProfileName={resolved.profileName}
       initialCategories={resolved.categories}
       initialPasscode={resolved.creatorPasscode}
+      initialPlan={resolved.plan || 'premier'}
+      expiresAt={resolved.expiresAt}
+      addonRows={resolved.addonRows || 0}
+      addonPhotos={resolved.addonPhotos || 0}
+      addonVideos={resolved.addonVideos || 0}
+      hasCustomAudioAddon={resolved.hasCustomAudioAddon || false}
     />
   )
 }
