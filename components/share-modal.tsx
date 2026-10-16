@@ -44,7 +44,7 @@ export function ShareModal({
     }
   }, [])
 
-  const fullUrl = origin ? `${origin}/${displaySlug}` : `https://ourflix.in/${displaySlug}`
+  const fullUrl = origin ? `${origin}/${displaySlug}` : `https://myflix.in/${displaySlug}`
 
   // Generate QR code whenever modal opens
   useEffect(() => {
@@ -78,7 +78,7 @@ export function ShareModal({
   const handleDownloadQr = () => {
     if (!qrDataUrl) return
     const link = document.createElement('a')
-    link.download = `OurFlix_${displaySlug}_QR.png`
+    link.download = `MyFlix_${displaySlug}_QR.png`
     link.href = qrDataUrl
     document.body.appendChild(link)
     link.click()
@@ -89,8 +89,8 @@ export function ShareModal({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${streamTitle} | OurFlix`,
-          text: `🎬 Watch our memory stream on OurFlix:`,
+          title: `${streamTitle} | MyFlix`,
+          text: `🎬 Watch our memory stream on MyFlix:`,
           url: fullUrl,
         })
       } catch (err) {
@@ -102,7 +102,7 @@ export function ShareModal({
   }
 
   const whatsappShareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
-    `🎬 Watch our personalized memory stream on OurFlix!\n\n🍿 Link: ${fullUrl}`
+    `🎬 Watch our personalized memory stream on MyFlix!\n\n🍿 Link: ${fullUrl}`
   )}`
 
   return (

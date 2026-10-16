@@ -183,7 +183,7 @@ function PaymentSuccessContent() {
             isOpen={isShareOpen}
             onClose={() => setIsShareOpen(false)}
             slug={slug}
-            title={`OurFlix: /${slug}`}
+            title={`MyFlix: /${slug}`}
           />
         )}
       </motion.div>

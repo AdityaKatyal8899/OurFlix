@@ -123,7 +123,7 @@ export function VisitProfileModal({ isOpen, onClose }: VisitProfileModalProps) {
                     setInputUrl(e.target.value)
                     if (errorMsg) setErrorMsg('')
                   }}
-                  placeholder="e.g. rdxthunder or ourflix.in/rdxthunder"
+                  placeholder="e.g. rdxthunder or myflix.in/rdxthunder"
                   className="w-full bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none"
                   autoFocus
                 />

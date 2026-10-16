@@ -166,7 +166,7 @@ function LoginContent() {
               <span>Official Google OAuth 2.0</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              Connect to <span className="text-primary">OurFlix</span>
+              Connect to <span className="text-primary">MyFlix</span>
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400 max-w-sm mx-auto leading-relaxed">
               Sign in with your Google account to create your personal stream or view your saved profiles.
@@ -252,7 +252,7 @@ function LoginContent() {
       {/* Footer */}
       <footer className="relative z-20 py-4 text-center text-[11px] text-zinc-400 border-t border-white/5 bg-black/40">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>&copy; {new Date().getFullYear()} OurFlix Studio. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} MyFlix Studio. All rights reserved.</span>
           <div className="flex items-center gap-4 text-zinc-400">
             <Link href="/" className="hover:text-white transition-colors">
               Home
