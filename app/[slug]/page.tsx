@@ -5,6 +5,7 @@ import { stripe } from '@/lib/stripe'
 import { getCashfreeOrder } from '@/lib/cashfree'
 import { connectToDatabase } from '@/lib/mongodb'
 import { Site } from '@/models/Site'
+import { getSessionUser } from '@/lib/auth'
 import Link from 'next/link'
 import { Film, Sparkles, ArrowRight, Lock, CreditCard } from 'lucide-react'
 
@@ -181,6 +182,12 @@ export default async function SlugPage({ params, searchParams }: PageProps) {
   }
 
   const resolved = await resolveSiteMediaUrls(site)
+  const sessionUser = await getSessionUser()
+  const isAuthorizedCreator =
+    isDemoSite ||
+    (!!sessionUser?.email &&
+      !!site.creatorEmail &&
+      sessionUser.email.toLowerCase() === site.creatorEmail.toLowerCase())
 
   // Pre-warm SSR headers: preload the featured hero thumbnail & audio chime
   const heroSlide =
@@ -210,6 +217,8 @@ export default async function SlugPage({ params, searchParams }: PageProps) {
       addonPhotos={resolved.addonPhotos || 0}
       addonVideos={resolved.addonVideos || 0}
       hasCustomAudioAddon={resolved.hasCustomAudioAddon || false}
+      isAuthorizedCreator={isAuthorizedCreator}
+      creatorEmail={site.creatorEmail}
     />
   )
 }

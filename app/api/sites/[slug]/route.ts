@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSiteBySlug, resolveSiteMediaUrls, saveSiteBySlug } from '@/lib/site-service'
+import { getSessionUser } from '@/lib/auth'
 
 export async function GET(
   request: NextRequest,
@@ -13,12 +14,21 @@ export async function GET(
       return NextResponse.json({ error: 'Site not found' }, { status: 404 })
     }
 
+    const sessionUser = await getSessionUser()
+    const isDemoSite = slug === 'rdxthunder' || slug === 'capybara' || slug === 'demo'
+    const isAuthorizedCreator =
+      isDemoSite ||
+      (!!sessionUser?.email &&
+        !!site.creatorEmail &&
+        sessionUser.email.toLowerCase() === site.creatorEmail.toLowerCase())
+
     const resolved = await resolveSiteMediaUrls(site)
     // Don't expose creator passcode to public viewer
     const safeResponse = {
       ...resolved,
-      creatorPasscode: undefined,
+      creatorPasscode: isAuthorizedCreator ? site.creatorPasscode : undefined,
       hasPasscode: Boolean(site.creatorPasscode),
+      isAuthorizedCreator,
     }
 
     return NextResponse.json(safeResponse)
@@ -41,10 +51,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Missing update payload' }, { status: 400 })
     }
 
-    const result = await saveSiteBySlug(slug, update, passcode)
+    const sessionUser = await getSessionUser()
+    const authorizedEmail = sessionUser?.email
+
+    const result = await saveSiteBySlug(slug, update, passcode, authorizedEmail)
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error || 'Failed to save' }, { status: 401 })
+      return NextResponse.json({ error: result.error || 'Failed to save' }, { status: 403 })
     }
 
     return NextResponse.json({ success: true, site: result.site })

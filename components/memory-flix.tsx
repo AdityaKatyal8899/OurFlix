@@ -41,6 +41,8 @@ interface MemoryFlixProps {
   addonPhotos?: number
   addonVideos?: number
   hasCustomAudioAddon?: boolean
+  isAuthorizedCreator?: boolean
+  creatorEmail?: string
 }
 
 const STORAGE_KEY_MEDIA = 'ourflix_media_items'
@@ -68,6 +70,8 @@ export function MemoryFlix({
   addonPhotos = 0,
   addonVideos = 0,
   hasCustomAudioAddon = false,
+  isAuthorizedCreator = false,
+  creatorEmail,
 }: MemoryFlixProps) {
   // App navigation & viewer state
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null)
@@ -143,13 +147,16 @@ export function MemoryFlix({
       const hasCreatorParam = params.get('creator') === 'true'
       const hasAuthSession = sessionStorage.getItem(`${STORAGE_KEY_AUTH}${slugSuffix}`) === 'true'
 
-      if (hasSetupParam) {
-        setIsOnboardingOpen(true)
-      } else if (hasCreatorParam || hasAuthSession) {
-        setIsCreatorAuthenticated(true)
-        setIsEditMode(true)
+      // Only allow creator mode if authorized with the stream's email (or on demo stream)
+      if (isAuthorizedCreator) {
+        if (hasSetupParam) {
+          setIsOnboardingOpen(true)
+        } else if (hasCreatorParam || hasAuthSession) {
+          setIsCreatorAuthenticated(true)
+          setIsEditMode(true)
+        }
 
-        // Only restore uncommitted client draft if creator is actively editing
+        // Only restore uncommitted client draft if creator is actively authorized
         const savedMedia = localStorage.getItem(`${STORAGE_KEY_MEDIA}${slugSuffix}`)
         if (savedMedia) {
           try {
@@ -171,14 +178,18 @@ export function MemoryFlix({
             setCategories(JSON.parse(savedCats))
           } catch {}
         }
-      }
 
-      const savedPasscode = localStorage.getItem(`${STORAGE_KEY_PASSCODE}${slugSuffix}`)
-      if (savedPasscode) setCreatorPasscode(savedPasscode)
+        const savedPasscode = localStorage.getItem(`${STORAGE_KEY_PASSCODE}${slugSuffix}`)
+        if (savedPasscode) setCreatorPasscode(savedPasscode)
+      } else {
+        // Public viewer: strictly reset any creator mode and edit mode
+        setIsCreatorAuthenticated(false)
+        setIsEditMode(false)
+      }
     } catch (err) {
       console.warn('Failed to load local storage draft:', err)
     }
-  }, [slugSuffix])
+  }, [slugSuffix, isAuthorizedCreator])
 
   // Lock creator mode
   const handleLockCreatorMode = () => {
@@ -492,11 +503,18 @@ export function MemoryFlix({
               onLinkClick={setActiveLink}
               profileUrl={avatarUrl}
               brandName={brandName}
-              isEditMode={isCreatorAuthenticated && isEditMode}
-              isCreatorUnlocked={isCreatorAuthenticated}
-              onEditBrand={() => setIsBrandModalOpen(true)}
-              onEditProfile={() => setIsProfileModalOpen(true)}
-              onUnlockCreator={() => setIsPasscodeModalOpen(true)}
+              isEditMode={isAuthorizedCreator && isCreatorAuthenticated && isEditMode}
+              isCreatorUnlocked={isAuthorizedCreator && isCreatorAuthenticated}
+              onEditBrand={isAuthorizedCreator && isCreatorAuthenticated && isEditMode ? () => setIsBrandModalOpen(true) : undefined}
+              onEditProfile={isAuthorizedCreator && isCreatorAuthenticated && isEditMode ? () => setIsProfileModalOpen(true) : undefined}
+              onUnlockCreator={
+                isAuthorizedCreator
+                  ? () => {
+                      setIsCreatorAuthenticated(true)
+                      setIsEditMode((prev) => !prev)
+                    }
+                  : undefined
+              }
               onOpenShare={() => setIsShareModalOpen(true)}
             />
 
@@ -574,7 +592,7 @@ export function MemoryFlix({
                   ))}
 
                   {/* Add New Category Row Button (Visible only to authenticated creator in Edit Mode) */}
-                  {isCreatorAuthenticated && isEditMode && (
+                  {isAuthorizedCreator && isCreatorAuthenticated && isEditMode && (
                     <div className="px-4 sm:px-8 max-w-[1600px] mx-auto pt-4">
                       <button
                         type="button"
@@ -596,7 +614,7 @@ export function MemoryFlix({
       </AnimatePresence>
 
       {/* Floating Visual Editor Toolbar (Rendered ONLY when Creator is Authenticated) */}
-      {isCreatorAuthenticated && (
+      {isAuthorizedCreator && isCreatorAuthenticated && (
         <EditorToolbar
           isEditMode={isEditMode}
           onToggleEditMode={() => setIsEditMode((prev) => !prev)}

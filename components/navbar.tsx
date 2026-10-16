@@ -107,16 +107,16 @@ export function Navbar({
 
         {/* Right cluster */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Subtle Creator Unlock trigger for paying clients */}
+          {/* Creator Studio trigger (Rendered ONLY when viewer is authorized as the stream owner via email) */}
           {!isCreatorUnlocked && onUnlockCreator && (
             <button
               type="button"
               onClick={onUnlockCreator}
-              className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:bg-white/10 hover:text-white transition-all shadow-sm"
-              title="Creator Login (Enter PIN to customize)"
+              className="flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary hover:border-primary hover:bg-primary/20 hover:text-white transition-all shadow-sm cursor-pointer"
+              title="Creator Studio (Enter Edit Mode)"
             >
-              <Lock className="size-3 text-primary" />
-              <span className="hidden sm:inline">Creator</span>
+              <Pencil className="size-3 text-primary" />
+              <span className="hidden sm:inline">Studio</span>
             </button>
           )}
 

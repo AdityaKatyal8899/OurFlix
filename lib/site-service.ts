@@ -149,22 +149,40 @@ export async function resolveSiteMediaUrls(site: SiteData): Promise<SiteData> {
 export async function saveSiteBySlug(
   rawSlug: string,
   update: Partial<SiteData>,
-  providedPasscode?: string
+  providedPasscode?: string,
+  authorizedEmail?: string
 ): Promise<{ success: boolean; error?: string; site?: SiteData }> {
   const slug = rawSlug.trim().toLowerCase()
   const db = await connectToDatabase()
+  const isDemoSite = slug === 'rdxthunder' || slug === 'capybara' || slug === 'demo'
 
   if (db) {
     try {
       const existing = await Site.findOne({ slug })
       if (existing) {
-        // Verify passcode if one is set
+        // Enforce email authorization if the stream has an owner email
+        if (existing.creatorEmail && !isDemoSite) {
+          if (!authorizedEmail || authorizedEmail.toLowerCase() !== existing.creatorEmail.toLowerCase()) {
+            return {
+              success: false,
+              error: 'Unauthorized: You are not authorized to edit this stream. Access is linked to the creator email.',
+            }
+          }
+        }
+
+        // Verify passcode if one is set (passcodes are now safely scoped per stream)
         if (
           providedPasscode &&
           existing.creatorPasscode &&
-          existing.creatorPasscode !== providedPasscode
+          existing.creatorPasscode !== providedPasscode &&
+          !isDemoSite
         ) {
           return { success: false, error: 'Invalid passcode' }
+        }
+
+        // Link unassigned stream to current user if authorizedEmail is present
+        if (!existing.creatorEmail && authorizedEmail && !isDemoSite) {
+          existing.creatorEmail = authorizedEmail.toLowerCase()
         }
 
         if (update.brandName !== undefined) existing.brandName = update.brandName
