@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Film, Pencil, Lock, KeyRound } from 'lucide-react'
+import { Film, Pencil, Lock, KeyRound, QrCode } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { useScrolled } from '@/hooks/use-scrolled'
@@ -21,6 +21,7 @@ interface NavbarProps {
   onEditBrand?: () => void
   onEditProfile?: () => void
   onUnlockCreator?: () => void
+  onOpenShare?: () => void
 }
 
 export function Navbar({
@@ -35,6 +36,7 @@ export function Navbar({
   onEditBrand,
   onEditProfile,
   onUnlockCreator,
+  onOpenShare,
 }: NavbarProps) {
   const scrolled = useScrolled(32)
 
@@ -127,6 +129,18 @@ export function Navbar({
             >
               <KeyRound className="size-3" />
               <span className="hidden sm:inline">Edit PIN</span>
+            </button>
+          )}
+
+          {onOpenShare && (
+            <button
+              type="button"
+              onClick={onOpenShare}
+              title="Share Stream Link & QR Code"
+              className="flex items-center gap-1.5 rounded-full border border-border bg-white/5 hover:bg-white/10 px-2.5 py-1 text-xs font-semibold text-zinc-300 hover:text-white transition-all shadow-sm cursor-pointer"
+            >
+              <QrCode className="size-3.5 text-primary" />
+              <span className="hidden sm:inline">Share & QR</span>
             </button>
           )}
 

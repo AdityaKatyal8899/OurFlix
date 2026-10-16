@@ -14,7 +14,9 @@ import {
   Lock,
   ExternalLink,
   ShieldCheck,
+  QrCode,
 } from 'lucide-react'
+import { ShareModal } from '@/components/share-modal'
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams()
@@ -23,6 +25,7 @@ function PaymentSuccessContent() {
   const amount = searchParams.get('amount') || '99'
   const addon = searchParams.get('addon') || ''
   const [copied, setCopied] = useState(false)
+  const [isShareOpen, setIsShareOpen] = useState(false)
 
   const origin =
     typeof window !== 'undefined' && window.location.origin
@@ -137,6 +140,17 @@ function PaymentSuccessContent() {
             <ArrowRight className="size-4" />
           </Link>
 
+          {slug && (
+            <button
+              type="button"
+              onClick={() => setIsShareOpen(true)}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold py-3 px-6 border border-white/15 transition-all text-sm cursor-pointer"
+            >
+              <QrCode className="size-4 text-primary" />
+              <span>Show QR Code & Share Gift</span>
+            </button>
+          )}
+
           <div className="grid grid-cols-2 gap-2">
             <Link
               href={`/${slug}`}
@@ -161,6 +175,16 @@ function PaymentSuccessContent() {
             <ShieldCheck className="size-3 text-emerald-400" />
             <span className="truncate">Ref: {orderId}</span>
           </div>
+        )}
+
+        {/* Share & QR Code Modal */}
+        {slug && (
+          <ShareModal
+            isOpen={isShareOpen}
+            onClose={() => setIsShareOpen(false)}
+            slug={slug}
+            title={`OurFlix: /${slug}`}
+          />
         )}
       </motion.div>
     </div>

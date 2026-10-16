@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { getSessionUser } from '@/lib/auth'
 import { getSitesByUser } from '@/lib/site-service'
-import { ProfileClientActions } from './profile-client-actions'
+import { ProfileClientActions, ProfileShareHeader } from './profile-client-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -125,7 +125,13 @@ export default async function ProfilePage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {userSites.length > 0 && (
+              <ProfileShareHeader
+                email={user.email}
+                firstSlug={userSites[0].slug}
+              />
+            )}
             <Link
               href="/#create"
               className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary to-red-600 hover:from-primary/95 hover:to-red-500 text-white font-bold text-xs sm:text-sm px-4 py-2.5 shadow-lg shadow-primary/30 transition-all"
@@ -227,7 +233,7 @@ export default async function ProfilePage() {
                         <span>Edit Studio</span>
                       </Link>
 
-                      <ProfileClientActions slug={site.slug} />
+                      <ProfileClientActions slug={site.slug} title={site.brandName || site.slug} />
                     </div>
                   </div>
                 )

@@ -23,6 +23,7 @@ import { CategoryModal } from './editor/category-modal'
 import { OnboardingModal } from './editor/onboarding-modal'
 import { PasscodeModal } from './editor/passcode-modal'
 import { AddonModal } from './editor/addon-modal'
+import { ShareModal } from './share-modal'
 import { CASHFREE_PRICING, CashfreeAddonKey } from '@/lib/cashfree'
 
 interface MemoryFlixProps {
@@ -100,6 +101,7 @@ export function MemoryFlix({
   const [editingCategory, setEditingCategory] = useState<string | null>(null)
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [isAddonModalOpen, setIsAddonModalOpen] = useState(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [addonDefaultTab, setAddonDefaultTab] = useState<CashfreeAddonKey>('addon_row_19')
 
   // Capacity Limits & Addon Calculations
@@ -495,6 +497,7 @@ export function MemoryFlix({
               onEditBrand={() => setIsBrandModalOpen(true)}
               onEditProfile={() => setIsProfileModalOpen(true)}
               onUnlockCreator={() => setIsPasscodeModalOpen(true)}
+              onOpenShare={() => setIsShareModalOpen(true)}
             />
 
             {query ? (
@@ -713,6 +716,14 @@ export function MemoryFlix({
         maxRows={maxRows}
         expiresAt={expiresAt}
         defaultSelected={addonDefaultTab}
+      />
+
+      {/* 11. Stream Sharing & QR Code Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        slug={slug}
+        title={brandName || slug}
       />
 
       {/* Cinematic Fullscreen Slideshow Overlay */}
