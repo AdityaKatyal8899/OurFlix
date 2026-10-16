@@ -9,6 +9,7 @@ import {
 import { getSiteBySlug, saveSiteBySlug, getDefaultSiteData } from '@/lib/site-service'
 import { connectToDatabase } from '@/lib/mongodb'
 import { Site } from '@/models/Site'
+import { getSessionUser } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -126,6 +127,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Read authenticated session user if logged in with Google
+    const sessionUser = await getSessionUser()
+    const creatorEmail = sessionUser?.email || customerEmail?.trim()?.toLowerCase() || ''
+    const creatorGoogleId = sessionUser?.googleId || ''
+
     // Reserve or update site draft
     const defaultData = getDefaultSiteData(slug)
     const siteDraft = {
@@ -134,6 +140,8 @@ export async function POST(request: NextRequest) {
       profileName: profileName?.trim() || defaultData.profileName,
       creatorPasscode: creatorPasscode || '1234',
       plan: planKey,
+      creatorEmail: creatorEmail || undefined,
+      creatorGoogleId: creatorGoogleId || undefined,
       isPaid: false,
     }
     await saveSiteBySlug(slug, siteDraft)
@@ -147,8 +155,8 @@ export async function POST(request: NextRequest) {
       amount: pricing.amount,
       customerId,
       customerPhone: customerPhone?.replace(/\D/g, '') || '9999999999',
-      customerEmail: customerEmail?.trim() || 'creator@myflix.com',
-      customerName: profileName?.trim() || 'MyFlix Creator',
+      customerEmail: creatorEmail || 'creator@myflix.com',
+      customerName: sessionUser?.name || profileName?.trim() || 'MyFlix Creator',
       returnUrl: `${origin}/payment/callback?order_id={order_id}&slug=${encodeURIComponent(slug)}`,
       notifyUrl: `${origin}/api/webhooks/cashfree`,
       orderNote: `MyFlix: ${slug} (${pricing.name})`,
@@ -168,6 +176,8 @@ export async function POST(request: NextRequest) {
           cashfreeOrderId: orderId,
           cashfreePaymentSessionId: order.payment_session_id,
           paymentProvider: 'cashfree',
+          creatorEmail: creatorEmail || undefined,
+          creatorGoogleId: creatorGoogleId || undefined,
         },
       }
     )

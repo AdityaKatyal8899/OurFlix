@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe'
 import { connectToDatabase } from '@/lib/mongodb'
 import { Site } from '@/models/Site'
 import { slugBloomFilter } from '@/lib/bloom-filter'
+import { getSessionUser } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,19 +60,22 @@ export default async function PaymentCallbackPage({ searchParams }: CallbackProp
             const plan = (cfOrder.order_tags?.plan as 'mini' | 'premier' | 'vip') || 'premier'
             const oneYearFromNow = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
 
+            const sessionUser = await getSessionUser()
+            const updateFields: Record<string, any> = {
+              isPaid: true,
+              plan,
+              transactionId,
+              cashfreeOrderId: cfOrder.order_id,
+              paidAt: new Date(),
+              expiresAt: oneYearFromNow,
+              paymentProvider: 'cashfree',
+            }
+            if (sessionUser?.email) updateFields.creatorEmail = sessionUser.email
+            if (sessionUser?.googleId) updateFields.creatorGoogleId = sessionUser.googleId
+
             await Site.findOneAndUpdate(
               { slug },
-              {
-                $set: {
-                  isPaid: true,
-                  plan,
-                  transactionId,
-                  cashfreeOrderId: cfOrder.order_id,
-                  paidAt: new Date(),
-                  expiresAt: oneYearFromNow,
-                  paymentProvider: 'cashfree',
-                },
-              },
+              { $set: updateFields },
               { new: true }
             )
             slugBloomFilter.add(slug)

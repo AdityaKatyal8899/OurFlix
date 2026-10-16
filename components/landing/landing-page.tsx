@@ -22,6 +22,8 @@ import {
   Check,
   AlertCircle,
   XCircle,
+  User,
+  UserCheck,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -187,6 +189,37 @@ export function LandingPage() {
     })
   }, [scrollYProgress])
 
+  // Google OAuth Authenticated User State
+  const [authUser, setAuthUser] = useState<{
+    id: string
+    googleId: string
+    email: string
+    name: string
+    avatar: string
+  } | null>(null)
+
+  useEffect(() => {
+    // Check if user is logged in
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.user) setAuthUser(data.user)
+      })
+      .catch(() => {})
+
+    // Check if returning from Google OAuth with preselected slug or plan
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const slugParam = params.get('slug')
+      const planParam = params.get('plan')
+      if (slugParam) setCustomSlug(slugParam)
+      if (planParam) {
+        const found = PLANS.find((p) => p.id === planParam)
+        if (found) setSelectedPlan(found)
+      }
+    } catch {}
+  }, [])
+
   // Unlock modal state for returning creators
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false)
   const [unlockSlug, setUnlockSlug] = useState('')
@@ -244,6 +277,16 @@ export function LandingPage() {
 
     if (targetSlug === 'rdxthunder' || targetSlug === 'capybara' || targetSlug === 'demo') {
       router.push(`/${targetSlug}`)
+      return
+    }
+
+    // Require Google login to create a stream (exploring plans doesn't require login)
+    if (!authUser) {
+      router.push(
+        `/login?action=create&slug=${encodeURIComponent(targetSlug)}&plan=${encodeURIComponent(
+          selectedPlan.id
+        )}&redirect=${encodeURIComponent('/#create')}`
+      )
       return
     }
 
@@ -409,20 +452,58 @@ export function LandingPage() {
 
           {/* Right CTAs */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {authUser ? (
+              <Link
+                href="/profile"
+                id="header-user-profile-btn"
+                className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-white bg-white/5 hover:bg-white/10 border border-white/15 px-3 py-1.5 rounded-xl transition-all group"
+              >
+                {authUser.avatar ? (
+                  <Image
+                    src={authUser.avatar}
+                    alt={authUser.name || 'User'}
+                    width={22}
+                    height={22}
+                    className="size-5.5 rounded-full border border-primary/50 object-cover"
+                  />
+                ) : (
+                  <div className="size-5.5 rounded-full bg-primary flex items-center justify-center text-[10px] font-bold text-white">
+                    {authUser.name?.charAt(0) || 'U'}
+                  </div>
+                )}
+                <span className="max-w-[110px] truncate hidden sm:inline">{authUser.name || 'My Profile'}</span>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary border border-primary/30">
+                  Streams
+                </span>
+              </Link>
+            ) : (
+              <Link
+                href="/login?redirect=/profile"
+                id="header-oauth-login-btn"
+                className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-xl transition-all"
+              >
+                <User className="size-3.5 text-zinc-400 shrink-0" />
+                <span>Sign In</span>
+              </Link>
+            )}
+
             <button
               type="button"
               onClick={() => setIsUnlockModalOpen(true)}
-              className="flex items-center gap-1 text-xs sm:text-sm font-medium text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-1.5 rounded-xl transition-all"
+              id="header-passcode-unlock-btn"
+              title="Unlock an existing stream with 4-digit passcode"
+              className="flex items-center gap-1 text-xs sm:text-sm font-medium text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 px-2.5 py-1.5 rounded-xl transition-all hidden md:flex"
             >
-              <Lock className="size-3.5 text-zinc-400 shrink-0" />
-              <span>Login</span>
+              <Lock className="size-3 text-zinc-500 shrink-0" />
+              <span>Passcode</span>
             </button>
 
             <a
               href="#plans"
+              id="header-plans-explore-btn"
               className="flex items-center gap-1 text-xs sm:text-sm font-bold bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-xl shadow-md shadow-primary/25 transition-all hover:scale-[1.02] active:scale-95"
             >
-              <span>Plans</span>
+              <span>Explore Plans</span>
               <ArrowRight className="size-3.5 hidden sm:inline" />
             </a>
           </div>
@@ -489,6 +570,33 @@ export function LandingPage() {
                   Change Plan
                 </a>
               </div>
+
+              {/* Google OAuth Status Banner */}
+              {authUser ? (
+                <div className="mb-2.5 flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-[11px] text-emerald-300">
+                  <div className="flex items-center gap-1.5 min-w-0 truncate">
+                    <CheckCircle2 className="size-3 text-emerald-400 shrink-0" />
+                    <span className="truncate">
+                      Signed in as <strong className="text-white">{authUser.name || authUser.email}</strong> • Stream will link to your account
+                    </span>
+                  </div>
+                  <Link href="/profile" className="text-emerald-400 hover:text-emerald-300 font-bold shrink-0">
+                    My Streams &rarr;
+                  </Link>
+                </div>
+              ) : (
+                <div className="mb-2.5 flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 text-[11px] text-zinc-400">
+                  <div className="flex items-center gap-1.5 min-w-0 truncate">
+                    <span className="size-1.5 rounded-full bg-zinc-500 shrink-0" />
+                    <span className="truncate">
+                      Exploring plans doesn&apos;t require login. Google sign-in required when creating.
+                    </span>
+                  </div>
+                  <Link href="/login?redirect=/profile" className="text-primary hover:text-red-400 font-bold shrink-0">
+                    Sign In
+                  </Link>
+                </div>
+              )}
 
               <form
                 onSubmit={handleCreateSite}

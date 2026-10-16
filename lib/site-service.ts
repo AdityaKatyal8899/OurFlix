@@ -20,6 +20,8 @@ export interface SiteData {
   addonPhotos?: number
   addonVideos?: number
   hasCustomAudioAddon?: boolean
+  creatorEmail?: string
+  creatorGoogleId?: string
   stripeSessionId?: string
   transactionId?: string
   paidAt?: Date | string
@@ -233,4 +235,50 @@ export async function saveSiteBySlug(
   }
   inMemorySites.set(slug, updated)
   return { success: true, site: updated }
+}
+
+export async function getSitesByUser(email?: string, googleId?: string): Promise<SiteData[]> {
+  if (!email && !googleId) return []
+
+  try {
+    const isConnected = await connectToDatabase()
+    if (isConnected) {
+      const orConditions: Record<string, unknown>[] = []
+      if (email) orConditions.push({ creatorEmail: email.toLowerCase().trim() })
+      if (googleId) orConditions.push({ creatorGoogleId: googleId })
+
+      const docs = await Site.find({ $or: orConditions }).sort({ updatedAt: -1 }).lean()
+      return docs.map((doc: any) => ({
+        slug: doc.slug,
+        brandName: doc.brandName,
+        profileName: doc.profileName,
+        profileAvatar: doc.profileAvatar,
+        introAudioUrl: doc.introAudioUrl,
+        creatorPasscode: doc.creatorPasscode,
+        categories: doc.categories,
+        mediaItems: doc.mediaItems || [],
+        isPaid: doc.isPaid,
+        plan: doc.plan,
+        expiresAt: doc.expiresAt,
+        addonRows: doc.addonRows || 0,
+        addonPhotos: doc.addonPhotos || 0,
+        addonVideos: doc.addonVideos || 0,
+        hasCustomAudioAddon: doc.hasCustomAudioAddon,
+        creatorEmail: doc.creatorEmail,
+        creatorGoogleId: doc.creatorGoogleId,
+        paidAt: doc.paidAt,
+      }))
+    }
+  } catch (err) {
+    console.warn('Failed to fetch user sites:', err)
+  }
+
+  // Fallback to in-memory check
+  const results: SiteData[] = []
+  for (const site of inMemorySites.values()) {
+    if ((email && site.creatorEmail === email) || (googleId && site.creatorGoogleId === googleId)) {
+      results.push(site)
+    }
+  }
+  return results
 }

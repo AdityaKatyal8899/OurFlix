@@ -29,6 +29,11 @@ const nextConfig = {
         hostname: '**.amazonaws.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: '**.googleusercontent.com',
+        pathname: '/**',
+      },
     ],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [64, 128, 256, 384],

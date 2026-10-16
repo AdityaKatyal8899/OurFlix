@@ -17,6 +17,8 @@ export interface ISite extends Document {
   addonPhotos?: number
   addonVideos?: number
   hasCustomAudioAddon?: boolean
+  creatorEmail?: string
+  creatorGoogleId?: string
   stripeSessionId?: string
   cashfreeOrderId?: string
   cashfreePaymentSessionId?: string
@@ -110,6 +112,16 @@ const SiteSchema = new Schema<ISite>(
     hasCustomAudioAddon: {
       type: Boolean,
       default: false,
+    },
+    creatorEmail: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
+    creatorGoogleId: {
+      type: String,
+      index: true,
     },
     stripeSessionId: {
       type: String,
