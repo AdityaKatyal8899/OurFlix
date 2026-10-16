@@ -183,11 +183,16 @@ export default async function SlugPage({ params, searchParams }: PageProps) {
 
   const resolved = await resolveSiteMediaUrls(site)
   const sessionUser = await getSessionUser()
-  const isAuthorizedCreator =
-    isDemoSite ||
-    (!!sessionUser?.email &&
-      !!site.creatorEmail &&
-      sessionUser.email.toLowerCase() === site.creatorEmail.toLowerCase())
+  const isViewerMode = sParams.viewer === 'true'
+  // Demo stream studio sandbox is only active if explicitly requested via ?demo=studio or ?creator=true
+  const isDemoStudio = isDemoSite && (sParams.demo === 'studio' || sParams.creator === 'true')
+  const isRealStreamCreator =
+    !isDemoSite &&
+    !!sessionUser?.email &&
+    !!site.creatorEmail &&
+    sessionUser.email.toLowerCase() === site.creatorEmail.toLowerCase()
+
+  const isAuthorizedCreator = !isViewerMode && (isDemoStudio || isRealStreamCreator)
 
   // Pre-warm SSR headers: preload the featured hero thumbnail & audio chime
   const heroSlide =

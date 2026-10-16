@@ -617,6 +617,7 @@ export function MemoryFlix({
       {isAuthorizedCreator && isCreatorAuthenticated && (
         <EditorToolbar
           isEditMode={isEditMode}
+          isDemoSandbox={slug === 'rdxthunder' || slug === 'capybara' || slug === 'demo'}
           onToggleEditMode={() => setIsEditMode((prev) => !prev)}
           onAddCategoryRow={handleRequestAddCategory}
           onSave={handleSaveDraft}

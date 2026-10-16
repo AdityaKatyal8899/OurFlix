@@ -28,6 +28,7 @@ import {
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { VisitProfileModal } from '@/components/visit-profile-modal'
 
 interface Template {
   id: string
@@ -224,6 +225,9 @@ export function LandingPage() {
   const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false)
   const [unlockSlug, setUnlockSlug] = useState('')
   const [unlockError, setUnlockError] = useState('')
+
+  // Visit a Stream / Profile as viewer modal state
+  const [isVisitModalOpen, setIsVisitModalOpen] = useState(false)
 
   const cleanSlug = customSlug
     .trim()
@@ -441,8 +445,15 @@ export function LandingPage() {
             <a href="#how-it-works" className="hover:text-white transition-colors">
               How It Works
             </a>
+            <button
+              type="button"
+              onClick={() => setIsVisitModalOpen(true)}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Watch Stream
+            </button>
             <Link
-              href="/rdxthunder"
+              href="/rdxthunder?viewer=true"
               className="flex items-center gap-1.5 text-zinc-300 hover:text-primary transition-colors font-medium"
             >
               <Sparkles className="size-3.5 text-amber-400" />
@@ -452,6 +463,16 @@ export function LandingPage() {
 
           {/* Right CTAs */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsVisitModalOpen(true)}
+              id="header-watch-stream-btn"
+              title="Paste a stream link or username to watch as guest"
+              className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+            >
+              <Tv className="size-3.5 text-primary shrink-0" />
+              <span className="hidden sm:inline">Watch Stream</span>
+            </button>
             {authUser ? (
               <Link
                 href="/profile"
@@ -1428,6 +1449,12 @@ export function LandingPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Visit Profile / Watch Stream Modal */}
+      <VisitProfileModal
+        isOpen={isVisitModalOpen}
+        onClose={() => setIsVisitModalOpen(false)}
+      />
     </div>
   )
 }

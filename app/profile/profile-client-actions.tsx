@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Share2, QrCode } from 'lucide-react'
+import { Share2, QrCode, Tv } from 'lucide-react'
 import { ShareModal } from '@/components/share-modal'
+import { VisitProfileModal } from '@/components/visit-profile-modal'
 
 interface ProfileClientActionsProps {
   slug: string
@@ -64,3 +65,27 @@ export function ProfileShareHeader({
     </>
   )
 }
+
+export function WatchStreamHeaderButton() {
+  const [isVisitOpen, setIsVisitOpen] = useState(false)
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setIsVisitOpen(true)}
+        className="flex items-center gap-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white font-semibold text-xs sm:text-sm px-3 py-2 border border-white/10 transition-all cursor-pointer"
+        title="Paste any profile link or username to watch as guest"
+      >
+        <Tv className="size-3.5 text-primary" />
+        <span>Watch a Stream</span>
+      </button>
+
+      <VisitProfileModal
+        isOpen={isVisitOpen}
+        onClose={() => setIsVisitOpen(false)}
+      />
+    </>
+  )
+}
+

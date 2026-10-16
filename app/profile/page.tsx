@@ -17,7 +17,11 @@ import {
 } from 'lucide-react'
 import { getSessionUser } from '@/lib/auth'
 import { getSitesByUser } from '@/lib/site-service'
-import { ProfileClientActions, ProfileShareHeader } from './profile-client-actions'
+import {
+  ProfileClientActions,
+  ProfileShareHeader,
+  WatchStreamHeaderButton,
+} from './profile-client-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,10 +62,12 @@ export default async function ProfilePage() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <WatchStreamHeaderButton />
+
             <Link
               href="/#plans"
-              className="text-xs sm:text-sm font-medium text-zinc-300 hover:text-white transition-colors hidden sm:block"
+              className="text-xs sm:text-sm font-medium text-zinc-300 hover:text-white transition-colors hidden md:block"
             >
               Explore Plans
             </Link>
@@ -218,11 +224,12 @@ export default async function ProfilePage() {
                     {/* Action buttons */}
                     <div className="pt-2 border-t border-white/10 flex items-center gap-2">
                       <Link
-                        href={`/${site.slug}`}
+                        href={`/${site.slug}?viewer=true`}
+                        title="Experience stream as a recipient/guest viewer"
                         className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs py-2.5 transition-all"
                       >
                         <ExternalLink className="size-3.5" />
-                        <span>View</span>
+                        <span>View as Guest</span>
                       </Link>
 
                       <Link

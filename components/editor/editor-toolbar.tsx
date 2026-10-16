@@ -14,6 +14,7 @@ import {
 
 interface EditorToolbarProps {
   isEditMode: boolean
+  isDemoSandbox?: boolean
   onToggleEditMode: () => void
   onAddCategoryRow: () => void
   onSave: () => void
@@ -24,6 +25,7 @@ interface EditorToolbarProps {
 
 export function EditorToolbar({
   isEditMode,
+  isDemoSandbox = false,
   onToggleEditMode,
   onAddCategoryRow,
   onSave,
@@ -36,7 +38,7 @@ export function EditorToolbar({
   const handleSaveClick = () => {
     onSave()
     setSaveToast(true)
-    setTimeout(() => setSaveToast(false), 2500)
+    setTimeout(() => setSaveToast(false), 3000)
   }
 
   return (
@@ -101,14 +103,22 @@ export function EditorToolbar({
           </>
         )}
 
+        {isDemoSandbox && (
+          <span className="flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 text-[10px] font-bold text-amber-300 uppercase tracking-wider shrink-0 select-none">
+            <Sparkles className="size-3 text-amber-400" />
+            <span>Sandbox Preview</span>
+          </span>
+        )}
+
         {/* Save Changes Button */}
         <button
           type="button"
           onClick={handleSaveClick}
-          className="flex items-center gap-1.5 rounded-full bg-white/10 hover:bg-white/20 px-3 py-1.5 text-xs font-medium text-white transition-all active:scale-95"
+          className="flex items-center gap-1.5 rounded-full bg-white/10 hover:bg-white/20 px-3 py-1.5 text-xs font-medium text-white transition-all active:scale-95 shrink-0"
+          title={isDemoSandbox ? 'Test preview saving in local sandbox (does not touch live database)' : 'Save changes to cloud database'}
         >
           <Save className="size-3.5" />
-          <span>Save Draft</span>
+          <span>{isDemoSandbox ? 'Save Preview' : 'Save Draft'}</span>
         </button>
 
         {/* Lock & Exit to Viewer Mode */}
@@ -116,7 +126,7 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={onLock}
-            className="flex items-center gap-1.5 rounded-full bg-white/5 hover:bg-white/15 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-white transition-colors"
+            className="flex items-center gap-1.5 rounded-full bg-white/5 hover:bg-white/15 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-white transition-colors shrink-0"
             title="Lock creator session and return to clean public viewing mode"
           >
             <span>Lock</span>
@@ -127,12 +137,12 @@ export function EditorToolbar({
         <button
           type="button"
           onClick={() => {
-            if (confirm('Reset all customized memories back to default?')) {
+            if (confirm(isDemoSandbox ? 'Reset sandbox memories back to default demo?' : 'Reset all customized memories back to default?')) {
               onReset()
             }
           }}
-          className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-white/10 hover:text-white transition-colors"
-          title="Reset to original defaults"
+          className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-white/10 hover:text-white transition-colors shrink-0"
+          title={isDemoSandbox ? 'Reset to original demo template' : 'Reset to original defaults'}
         >
           <RotateCcw className="size-3.5" />
         </button>
@@ -145,10 +155,23 @@ export function EditorToolbar({
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/90 px-4 py-2 text-xs font-medium text-emerald-200 shadow-xl backdrop-blur-md"
+            className={`fixed top-20 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium shadow-xl backdrop-blur-md ${
+              isDemoSandbox
+                ? 'border-amber-500/40 bg-amber-950/95 text-amber-200'
+                : 'border-emerald-500/30 bg-emerald-950/90 text-emerald-200'
+            }`}
           >
-            <Check className="size-4 text-emerald-400" />
-            <span>Changes saved to local draft! Ready for your client.</span>
+            {isDemoSandbox ? (
+              <>
+                <Sparkles className="size-4 text-amber-400" />
+                <span>Sandbox updated! Changes are local to this preview and never alter live streams.</span>
+              </>
+            ) : (
+              <>
+                <Check className="size-4 text-emerald-400" />
+                <span>Changes saved to local draft! Ready for your client.</span>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

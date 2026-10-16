@@ -62,6 +62,12 @@ export function getDefaultSiteData(slug: string): SiteData {
 
 export async function getSiteBySlug(rawSlug: string): Promise<SiteData | null> {
   const slug = rawSlug.trim().toLowerCase()
+
+  // Built-in demo streams always serve their pristine default templates
+  if (slug === 'rdxthunder' || slug === 'demo' || slug === 'capybara') {
+    return getDefaultSiteData(slug)
+  }
+
   const db = await connectToDatabase()
 
   if (db) {
@@ -153,8 +159,22 @@ export async function saveSiteBySlug(
   authorizedEmail?: string
 ): Promise<{ success: boolean; error?: string; site?: SiteData }> {
   const slug = rawSlug.trim().toLowerCase()
-  const db = await connectToDatabase()
   const isDemoSite = slug === 'rdxthunder' || slug === 'capybara' || slug === 'demo'
+
+  // DEMO PROFILES: Never mutate live database! Changes in demo are strictly client preview sandbox.
+  if (isDemoSite) {
+    const defaultData = getDefaultSiteData(slug)
+    return {
+      success: true,
+      site: {
+        ...defaultData,
+        ...update,
+        slug,
+      },
+    }
+  }
+
+  const db = await connectToDatabase()
 
   if (db) {
     try {
